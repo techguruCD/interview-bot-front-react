@@ -4,8 +4,8 @@ import Slider from 'react-slick'
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import chatbot from '../assets/images/chatbot.png'
-import {ReactComponent as RightToLeftFlow} from '../assets/images/RightToLeftFlow.svg'
-import {ReactComponent as LeftToRightFlow} from '../assets/images/LeftToRightFlow.svg'
+import { ReactComponent as RightToLeftFlow } from '../assets/images/RightToLeftFlow.svg'
+import { ReactComponent as LeftToRightFlow } from '../assets/images/LeftToRightFlow.svg'
 import QuicknEasyImage from '../assets/images/quickneasy.svg'
 import TechSkillsImage from '../assets/images/techskills.svg'
 import SimpleToTrainImage from '../assets/images/simpletotrain.svg'

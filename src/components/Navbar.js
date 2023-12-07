@@ -1,52 +1,64 @@
 import React from 'react'
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../utils';
 
 import LogoMainImage from '../assets/images/logo-main.png'
 import { ReactComponent as AirplaneSVG } from '../assets/images/svgs/airplane.svg'
 import { ReactComponent as MenuSVG } from '../assets/images/svgs/menu.svg'
-import {ReactComponent as CloseSVG} from '../assets/images/svgs/close.svg'
+import { ReactComponent as CloseSVG } from '../assets/images/svgs/close.svg'
+import { useDispatch, useSelector } from 'react-redux';
+import setAuthToken from '../utils/setAuthToken';
+import { setUser } from '../store/appSlice';
 
 const menu = [
   {
     title: "Home",
     path: "/",
+    auth: 'normal'
   },
   {
     title: "Profile",
     path: "/profile",
+    auth: 'private'
   },
   {
     title: "Chat",
     path: "/chat",
+    auth: 'private'
   },
   {
     title: "About",
     path: "/about",
+    auth: 'normal'
   },
   {
     title: "Blog",
     path: "/#blog",
+    auth: 'normal'
   },
   {
-    title: "Login",
-    path: "/login",
+    title: "Login / Register",
+    path: "/signin",
+    auth: 'public'
   },
+  {
+    title: "Logout",
+    path: "/signout",
+    auth: 'private'
+  }
 ];
 
 const Navbar = () => {
+  const dispatch = useDispatch()
+  const isAuthenticated = useSelector(state => state.app.token)
   const location = useLocation();
   const { pathname } = location;
+  const navigate = useNavigate()
   // const router = useRouter();
   // const { userToken } = useGlobalState();
   // const dispatch = useGlobalDispatch();
 
   let menuItems = menu.map((item) => {
-    // if (userToken && item.title === "Login") {
-    //   return { ...item, title: "Logout" };
-    // } else {
-    //   return item;
-    // }
     return item;
   });
 
@@ -80,9 +92,10 @@ const Navbar = () => {
             </div>
             <ul className="mx-[20px] mt-[3px] flex flex-col justify-center md:mx-[0px] md:mt-[0px] md:flex-row md:items-center">
               {menuItems &&
-                menuItems.map((item, index) => {
-                  const selected = item.path === pathname;
-
+                menuItems.filter(item => item.auth=='normal'||(item.auth=='private'&&isAuthenticated)||(item.auth=='public'&&!isAuthenticated))
+                .map((item, index) => {
+                  const selected = (item.path === pathname || (item.path == '/signin' && pathname == '/signup'));
+                  // alert(selected)
                   return (
                     <li
                       key={index}
@@ -92,13 +105,13 @@ const Navbar = () => {
                         "md:text-[#6355D8] md:border-[#6355D8]": selected,
                       })}
                       onClick={() => {
-                        // if (item.path === "/login")
-                        //   dispatch({
-                        //     type: "LOGIN_CURRENT_USER",
-                        //     payload: null,
-                        //   });
-                        // router.push(item.path);
-                        // toggleMenu(true);
+                        if (item.title=='Logout') {
+                          dispatch(setUser(null))
+                          setAuthToken(null)
+                          navigate('/')
+                          return;
+                        }
+                        navigate(item.path)
                       }}
                       suppressHydrationWarning={true}
                     >
