@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
+import axios from 'axios'
+import { cn } from "../utils";
+import showToaster from "../utils/showToaster";
 import { ReactComponent as MicrophoneSVG } from '../assets/images/svgs/microphone.svg'
 import { ReactComponent as AirplaneSVG } from '../assets/images/svgs/airplane.svg'
-import { cn } from "../utils";
+import InterviewerImage from '../assets/images/interviewer.png'
+import LogoImage from '../assets/images/logo.png'
 
 const Message = ({
   text,
@@ -30,16 +34,26 @@ export default function ChatBox({
   prompt = "",
 }) {
   const chatBoxRef = useRef(null);
-  const [history, setHistory] = useState([["", greeting]]);
+  const [history, setHistory] = useState([]);
 
   const [payload, setPayload] = useState("");
 
-  useEffect(() => {
-    setHistory([["", greeting]]);
-  }, [greeting]);
-
-  const handleSend = async () => {
-    
+  const handleSend = async (e) => {
+    const content = payload;
+    setHistory([...history, { role: 'user', content }])
+    setPayload('')
+    axios.post(process.env.REACT_APP_API_URL + '/user/chat', { messages: [...history, { role: 'user', content: payload }].slice(-5) })
+      .then(({ data }) => {
+        setHistory([...history, { role: 'user', content }, { role: 'assistant', content: data.data }])
+      }).catch(err => {
+        showToaster(err?.response?.data?.message)
+      })
+    // try {
+    //   const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/chat', { message: payload })
+    //   addMessage('assistant', data.data)
+    // } catch (err) {
+    //   showToaster(err?.response?.data?.message)
+    // }
   };
 
   const scrollToBottom = () => {
@@ -52,6 +66,10 @@ export default function ChatBox({
     scrollToBottom();
   }, [history]);
 
+  useEffect(() => {
+    setHistory([{ role: 'assistant', content: greeting }]);
+  }, [greeting]);
+
   return (
     <div className="flex min-h-[500px] flex-col w-full justify-between px-2 sm:px-10 md:px-28 mb-3 sm:mb-20">
       <div
@@ -63,11 +81,11 @@ export default function ChatBox({
             .flat()
             .map((item, index) => (
               <Message
-                text={item}
+                text={item.content}
                 avatar={
-                  index % 2 ? "/images/logo.png" : "/images/interviewer.png"
+                  item.role == 'user' ? InterviewerImage : LogoImage
                 }
-                isRight={index % 2 === 0}
+                isRight={item.role == 'user'}
                 key={index}
               />
             ))}

@@ -115,7 +115,8 @@ function ConversationModal({ isOpen, onClose: handleClose, data }) {
 export default function ChatPage() {
   const bot = useSelector(state => state.app.bot)
   const [isConversationOpen, setIsConversationOpen] = useState(false);
-  const { greeting, prompt } = useSelector((state) => state.app);
+  const greeting = useSelector((state) => state.app.bot?.greeting);
+  const prompt = useSelector((state) => state.app.boot?.prompt);
 
   const [conversationModalData, setConversationModalData] = useState({
     prompt: "",

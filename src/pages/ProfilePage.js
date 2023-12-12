@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux';
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux';
 import copy from "clipboard-copy";
 import { useSnackbar } from "notistack";
 import { Transition } from "@headlessui/react";
+import axios from 'axios';
 
 import AvatarImage from '../assets/images/avatar.png'
 import { ReactComponent as Linkedin } from "../assets/images/svgs/linkedin.svg";
@@ -11,27 +12,78 @@ import { ReactComponent as Copy } from '../assets/images/svgs/copy.svg'
 import { ReactComponent as Check } from "../assets/images/svgs/check.svg";
 import { ReactComponent as Pencil } from "../assets/images/svgs/pencil.svg";
 import { ReactComponent as Arrow } from "../assets/images/svgs/arrow.svg";
-
 import { ReactComponent as Close } from '../assets/images/svgs/close.svg'
+
+import { setDraftProfile, setProfile } from '../store/appSlice'
+
+import showToaster from '../utils/showToaster'
 
 function ProfileModal({
   isOpen,
   onClose: handleClose,
   profile
 }) {
+  const dispatch = useDispatch()
+  const fileInput = useRef(null)
   const [name, setName] = useState('')
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
+  const [headline, setHeadLine] = useState('')
+  const [about, setAbout] = useState('')
   const [website, setWebsite] = useState('')
   const [linkedin, setLinkedin] = useState('')
   const [avatar, setAvatar] = useState('')
+  const [isAvatarChanged, setIsAvatarChanged] = useState(false)
+  const [file, setFile] = useState(null)
+  const [isFileChanged, setIsFileChanged] = useState(false)
+
   useEffect(() => {
-    setName(profile?.name)
-    setTitle(profile?.title)
-    setDescription(profile?.description)
-    setWebsite(profile?.website)
-    setLinkedin(profile?.linkedin)
+    if (isOpen) {
+      setName(profile?.name || '')
+      setHeadLine(profile?.headline || '')
+      setAbout(profile?.about || '')
+      setWebsite(profile?.website || '')
+      setLinkedin(profile?.linkedin || '')
+    }
   }, [isOpen])
+
+  async function convertFile2Base64(file) {
+    let fileData = {}
+    fileData.content2FileType = file.type
+    fileData.content2Extension = file.name.split('.').pop()
+    fileData.name = file.name
+    await (new Promise(resolve => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onloadend = function () {
+        fileData.data = reader.result
+        resolve()
+      }
+    }))
+    return fileData;
+  }
+
+  async function onFileChange(e) {
+    const file = e.target?.files?.[0]
+    if (!file) return;
+    let fileData = await convertFile2Base64(file)
+    fileInput.current.value = null
+    setFile(fileData)
+    setIsFileChanged(true)
+  }
+
+  async function handleSubmit(e) {
+    e?.preventDefault()
+    try {
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/draft-profile', {
+        name, headline, about, website, linkedin, avatar, isFileChanged, file
+      })
+      dispatch(setDraftProfile(data.data))
+      showToaster(data?.message)
+      handleClose()
+    } catch (err) {
+      showToaster(err.response.data.message)
+    }
+  }
+
   return (
     <>
       <Transition
@@ -72,29 +124,20 @@ function ProfileModal({
                     alt="User Avatar"
                   />
                 </div>
-                <label className="block">
-                  <input
-                    id="file_input"
-                    type="file"
-                    // onChange={handleUpload}
-                    className="text-slate-500 block w-full text-sm file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:py-2 file:px-4 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                </label>
               </div>
               <div className="mb-6">
                 <label
                   htmlFor="title"
                   className="mb-2 block text-base font-medium text-gray-900 dark:text-white"
                 >
-                  Username
+                  User name
                 </label>
                 <input
                   type="text"
-                  id="username"
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                  placeholder="Job Title"
+                  placeholder="User name"
                   required
-                  defaultValue={name}
+                  value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
@@ -111,8 +154,8 @@ function ProfileModal({
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
                   placeholder="Gaming is Awesome!"
                   required
-                  defaultValue={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  value={headline}
+                  onChange={(e) => setHeadLine(e.target.value)}
                 />
               </div>
               <div className="mb-6">
@@ -120,15 +163,15 @@ function ProfileModal({
                   htmlFor="description"
                   className="mb-2 block text-base font-medium text-gray-900 dark:text-white"
                 >
-                  Description
+                  About
                 </label>
                 <textarea
                   id="description"
                   rows={4}
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
                   placeholder="Add a summary of your career, aspirations and interests"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={about}
+                  onChange={(e) => setAbout(e.target.value)}
                 ></textarea>
               </div>
               <div className="mb-6">
@@ -143,8 +186,7 @@ function ProfileModal({
                   id="website"
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
                   placeholder="Your website link here."
-                  required
-                  defaultValue={website}
+                  value={website}
                   onChange={(e) => setWebsite(e.target.value)}
                 />
               </div>
@@ -161,8 +203,21 @@ function ProfileModal({
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
                   placeholder="Your LinkedIn profile link here."
                   required
-                  defaultValue={linkedin}
+                  value={linkedin}
                   onChange={(e) => setLinkedin(e.target.value)}
+                />
+              </div>
+              <div className='mb-6'>
+                <label className="mb-2 block text-base font-medium text-gray-900 dark:text-white">
+                  Attach file
+                </label>
+                <input
+                  accept='.pdf'
+                  id="file_input"
+                  type="file"
+                  ref={fileInput}
+                  onChange={onFileChange}
+                  className="text-slate-500 block w-full text-sm file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:py-2 file:px-4 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
                 />
               </div>
               {/* <div className="mb-6">
@@ -187,7 +242,7 @@ function ProfileModal({
               <button
                 type="button"
                 className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-              // onClick={handleSubmit}
+                onClick={handleSubmit}
               >
                 OK
               </button>
@@ -246,9 +301,23 @@ function ProfielLink() {
 }
 
 export default function ProfilePage() {
+  const dispatch = useDispatch()
+
   const profile = useSelector(state => state.app.profile);
+  const draftProfile = useSelector(state => state.app.draftProfile)
+  const visibleProfile = useMemo(() => (draftProfile || profile), [profile, draftProfile])
   const [isProfileOpen, setIsProfileOpen] = useState(false)
 
+  async function onPublish() {
+    try {
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/publish-profile')
+      showToaster(data?.message)
+      dispatch(setProfile(data.data))
+      dispatch(setDraftProfile(null))
+    } catch (err) {
+      showToaster(err?.response?.data?.message)
+    }
+  }
 
   return (
     <div className="max-w-[1200px] px-[20px] mx-auto w-full mt-[25px]">
@@ -265,7 +334,9 @@ export default function ProfilePage() {
               Don&apos;t forget to publish your latest updates
             </span>
           </div>
-          <button className="border-transparent uppercase border-[1px] bg-[#6355D8] text-white py-2 px-7 rounded-md text-[14px] hover:bg-white hover:border-[#6355D8] hover:text-[#6355D8] transition-all flex gap-2 items-center">
+          <button
+            className="border-transparent uppercase border-[1px] bg-[#6355D8] text-white py-2 px-7 rounded-md text-[14px] hover:bg-white hover:border-[#6355D8] hover:text-[#6355D8] transition-all flex gap-2 items-center"
+            onClick={onPublish}>
             <span>Publish</span>
             <Arrow width={16} />
           </button>
@@ -276,20 +347,20 @@ export default function ProfilePage() {
         <div className="flex flex-col sm:flex-row justify-between w-full items-start gap-3">
           <div className="flex flex-row gap-6 items-center">
             <img
-              src={profile?.avatar || AvatarImage}
+              src={visibleProfile?.avatar || AvatarImage}
               className="w-[110px] h-[115px] rounded-full object-cover"
               alt="avatar"
             />
             <div className="flex flex-col gap-[2px]">
               <span className="text-[22px] font-[700] text-[#6355D8]">
-                {profile?.name}
+                {visibleProfile?.name}
               </span>
               <span className="text-[17px] text-gray-500 font-[500]">
-                {profile?.title}
+                {visibleProfile?.headline}
               </span>
               <div className="flex flex-row gap-2 mt-[5px]">
                 <a
-                  href={profile?.linkedin}
+                  href={visibleProfile?.linkedin}
                   target="_blank"
                   className="cursor-pointer text-gray-700 hover:text-gray-950 transition-all"
                   rel="noreferrer"
@@ -297,7 +368,7 @@ export default function ProfilePage() {
                   <Linkedin width={18} />
                 </a>
                 <a
-                  href={profile?.website}
+                  href={visibleProfile?.website}
                   target="_blank"
                   className="cursor-pointer text-gray-700 hover:text-gray-950 transition-all my-auto"
                   rel="noreferrer"
@@ -319,7 +390,7 @@ export default function ProfilePage() {
 
         <div className="mt-10 pb-[100px]">
           <span className="text-[20px] font-bold">About me</span>
-          <p className="mt-2 text-gray-700 font-[500]">{profile?.description}</p>
+          <p className="mt-2 text-gray-700 font-[500]">{visibleProfile?.about}</p>
         </div>
         <div className="mt-10 pb-[20px]">
           <label className="block">
@@ -338,8 +409,7 @@ export default function ProfilePage() {
       <ProfileModal
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
-      // data={profileModalData}
-      // onSave={handleProfileSave}
+        profile={visibleProfile}
       />
     </div>
   )
