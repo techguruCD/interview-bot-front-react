@@ -4,8 +4,9 @@ import copy from "clipboard-copy";
 import { useSnackbar } from "notistack";
 import { Transition } from "@headlessui/react";
 import axios from 'axios';
+import moment from 'moment'
 
-import { ArchiveBoxXMarkIcon, ArrowPathRoundedSquareIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
+import { ArchiveBoxXMarkIcon, ArrowPathRoundedSquareIcon, FolderOpenIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 
 // import AvatarImage from '../assets/images/avatar.png'
 import { ReactComponent as Linkedin } from "../assets/images/svgs/linkedin.svg";
@@ -17,10 +18,11 @@ import { ReactComponent as Arrow } from "../assets/images/svgs/arrow.svg";
 import { ReactComponent as Close } from '../assets/images/svgs/close.svg'
 import InterviewerImage from '../assets/images/interviewer.png'
 
-import { setLoading, setProfile } from '../store/appSlice'
+import { setFiles, setLoading, setProfile } from '../store/appSlice'
 
 import showToaster from '../utils/showToaster'
 import convertJoiErrors2Errors from '../utils/convertJoiErrors2Errors';
+import convertFile2Base64 from '../utils/convertFile2Base64'
 
 function ProfileModal({
   isOpen,
@@ -50,35 +52,8 @@ function ProfileModal({
       setLinkedin(profile?.linkedin || '')
       setPrompt(profile?.prompt || '')
       setGreeting(profile?.greeting || '')
-      setFile(profile?.file || '')
     }
   }, [isOpen])
-
-  async function convertFile2Base64(file) {
-    let fileData = {}
-    fileData.content2FileType = file.type
-    fileData.content2Extension = file.name.split('.').pop()
-    fileData.name = file.name
-    await (new Promise(resolve => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onloadend = function () {
-        fileData.data = reader.result
-        resolve()
-      }
-    }))
-    return fileData;
-  }
-
-  async function onFileChange(e) {
-    const file = e.target?.files?.[0]
-    if (!file) return;
-    dispatch(setLoading(true))
-    let fileData = await convertFile2Base64(file)
-    fileInput.current.value = null
-    setFile(fileData)
-    dispatch(setLoading(false))
-  }
 
   async function onAvatarChange(e) {
     const file = e.target?.files?.[0]
@@ -95,7 +70,7 @@ function ProfileModal({
     dispatch(setLoading(true))
     try {
       const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/update-profile', {
-        name, headline, about, linkedin, prompt, greeting, avatar, file
+        name, headline, about, linkedin, prompt, greeting, avatar
       })
       dispatch(setProfile(data.data))
       showToaster(data?.message)
@@ -270,24 +245,6 @@ function ProfileModal({
                 />
                 {errors?.greeting && <label className="block text-rose-700 font-medium">{errors?.greeting}</label>}
               </div>
-              <div className='mb-6'>
-                <label className="mb-2 block text-base font-medium text-gray-900 dark:text-white flex">
-                  Attach file: {file ? (typeof (file) == 'string' ? <a href={process.env.REACT_APP_API_URL + file} className="text-indigo-600" target='_blank'>CLICK HERE</a> : file.name) : 'No File'}
-                  <div className='flex gap-4 ml-6'>
-                    <ArrowPathRoundedSquareIcon className="h-6 w-6 text-gray-500 cursor-pointer" onClick={() => setFile(profile?.file || null)} />
-                    <FolderOpenIcon className="h-6 w-6 text-gray-500 cursor-pointer" onClick={() => fileInput.current.click()} />
-                    <ArchiveBoxXMarkIcon className="h-6 w-6 text-gray-500 cursor-pointer" onClick={() => setFile(null)} />
-                  </div>
-                </label>
-                <input
-                  accept='.pdf'
-                  type="file"
-                  ref={fileInput}
-                  onChange={onFileChange}
-                  hidden
-                />
-                {errors?.file && <label className="block text-rose-700 font-medium">{errors?.file}</label>}
-              </div>
             </div>
             <div className="h-[15%] flex items-center space-x-2 rounded-b border-t border-gray-200 p-6 dark:border-gray-600">
               <button
@@ -314,8 +271,9 @@ function ProfileModal({
 
 
 function ProfielLink() {
+  const profile = useSelector(state => state.app.profile)
+  const url = useMemo(() => process.env.REACT_APP_API_URL + '/' + profile?.chatId)
   const { enqueueSnackbar } = useSnackbar();
-  const url = "https://www.linkedin.com/in/neiljaitken/";
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = () => {
@@ -336,7 +294,7 @@ function ProfielLink() {
       <span className="font-bold text-gray-500 w-fit flex-1 whitespace-nowrap">
         Profile link
       </span>
-      <span className="text-gray-300 text-ellipsis whitespace-nowrap max-w-[140px] sm:w-fit overflow-hidden">
+      <span className="text-gray-300 text-ellipsis whitespace-nowrap max-w-[180px] sm:w-fit overflow-hidden">
         {url}
       </span>
 
@@ -351,11 +309,150 @@ function ProfielLink() {
   );
 }
 
+function AttachmentFolder({
+  isOpen,
+  onClose: handleClose
+}) {
+  const dispatch = useDispatch()
+  const files = useSelector(state => state.app.user?.profile?.files)
+  const fileInput = useRef(null)
+  console.error(files)
+  async function onFileChange(e) {
+    const file = e.target?.files?.[0]
+    if (!file) return;
+    dispatch(setLoading(true))
+    let fileData = await convertFile2Base64(file)
+    fileInput.current.value = null
+    try {
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/add-file', fileData)
+      dispatch(setFiles(data.data))
+      showToaster(data.message)
+    } catch (err) {
+      showToaster(err?.response?.data?.message || { error: 'Please try again later' })
+    }
+    dispatch(setLoading(false))
+  }
+  async function onDeleteFile(fileId) {
+    dispatch(setLoading(true))
+    try {
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/delete-file', { id: fileId })
+      dispatch(setFiles(data.data))
+      showToaster(data.message)
+    } catch (err) {
+      showToaster(err?.response?.data?.message || { error: 'Please try again later' })
+    }
+    dispatch(setLoading(false))
+  }
+  return (
+    <>
+      <Transition
+        show={isOpen}
+        enter="transition-opacity duration-300"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="transition-opacity duration-300"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+      >
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="fixed inset-0 bg-black opacity-60"
+            onClick={handleClose}
+          ></div>
+
+          <div className="relative min-h-[300px] flex flex-col max-h-[90%] w-full max-w-2xl rounded-lg bg-white shadow dark:bg-gray-700">
+            <div className="h-[10%] flex items-start justify-between rounded-t border-b p-4 dark:border-gray-600">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Uploaded files
+              </h3>
+              <button
+                type="button"
+                className="bg-transparent ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm text-gray-400 hover:text-gray-900 focus:outline-none dark:hover:bg-gray-600 dark:hover:text-white"
+                onClick={handleClose}
+              >
+                <Close width={24} height={24} />
+              </button>
+            </div>
+            <div className="scrollbar grow overflow-y-auto h-[75%] space-y-2 p-6">
+              <div className='flex'>
+                <div className='flex rounded-md px-3 py-2 text-center font-semibold bg-indigo-500 hover:bg-indigo-400 text-white cursor-pointer ml-auto' onClick={() => fileInput.current.click()}>
+                  <PlusCircleIcon className='w-6 mr-2' /> Add File
+                </div>
+                <input
+                  accept='.pdf'
+                  type="file"
+                  ref={fileInput}
+                  onChange={onFileChange}
+                  hidden
+                />
+              </div>
+              <div className='mx-2 overflow-x-auto'>
+                {!!(!files || !files.length) &&
+                  'No files'
+                }
+                {
+                  !!files?.length &&
+                  (<div className='inline-block min-w-full py-2 align-middle px-6'>
+                    <div className='min-w-full divide-y divide-gray-300'>
+                      <table className='min-w-full divide-y divide-gray-300'>
+                        <thead>
+                          <tr>
+                            <th scope="col" className='py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0'>
+                              Name
+                            </th>
+                            <th scope="col" className='py-3.5 pl-4 text-left text-sm font-semibold text-gray-900'>
+                              Time
+                            </th>
+                            <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
+                              {/* <ArchiveBoxXMarkIcon className="h-6 w-6 text-rose-500 cursor-pointer ml-auto"/> */}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className='divide-y divide-gray-200'>
+                          {files?.length &&
+                            files.map((file, index) => (
+                              <tr key={index}>
+                                <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0'>
+                                  <a className='underline text-indigo-500' href={process.env.REACT_APP_API_URL + file.path} target='_blank'>{file.name}</a>
+                                </td>
+                                <td className='whitespace-nowrap px-3 py-4 text-sm text-gray-600'>
+                                  {moment.utc(file.createdAt).local().format('yyyy-MM-DD HH:mm:ss')}
+                                </td>
+                                <td className='relative py-3.5 pl-3 pr-4 sm:pr-0'>
+                                  <ArchiveBoxXMarkIcon className="h-6 w-6 text-rose-500 cursor-pointer ml-auto" onClick={() => onDeleteFile(file.id)} />
+                                </td>
+                              </tr>
+                            ))
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>)
+                }
+              </div>
+            </div>
+            <div className="h-[15%] flex items-center space-x-2 rounded-b border-t border-gray-200 p-6 dark:border-gray-600">
+              <button
+                type="button"
+                className="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:z-10 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:ring-gray-600"
+                onClick={handleClose}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </>
+  )
+}
+
 export default function ProfilePage() {
   const dispatch = useDispatch()
 
   const profile = useSelector(state => state.app.profile);
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isAttachmentFolderOpen, setIsAttachmentFolderOpen] = useState(false)
 
   return (
     <div className="max-w-[1200px] px-[20px] mx-auto w-full mt-[25px]">
@@ -425,17 +522,21 @@ export default function ProfilePage() {
           <p className="mt-2 text-gray-700 font-[500]">{profile?.about}</p>
         </div>
 
-        {
-          profile?.file &&
-          <div className="mt-10 pb-[100px] text-[20px] font-bold">
-            To see attached CV: <a href={process.env.REACT_APP_API_URL + profile.file} target='_blank' className='text-indigo-600 underline'>CLICK HERE</a>
-          </div>
-        }
+        <div className="mt-10 pb-[100px] text-[20px] font-bold">
+          {/* To see attached CV: <a href={process.env.REACT_APP_API_URL + profile.file} target='_blank' className='text-indigo-600 underline'>CLICK HERE</a> */}
+          <span className='max-w-64'>Provide your CV & Q&A documents so your bot knows your work history: </span>
+          <span onClick={() => setIsAttachmentFolderOpen(true)} className="cursor-pointer text-rose-600 underline">Upload</span>
+        </div>
       </div>
 
       <ProfileModal
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
+        profile={profile}
+      />
+      <AttachmentFolder
+        isOpen={isAttachmentFolderOpen}
+        onClose={() => setIsAttachmentFolderOpen(false)}
         profile={profile}
       />
     </div>

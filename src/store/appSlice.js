@@ -18,6 +18,15 @@ export const appSlice = createSlice({
         state.token = action.payload
       else state.token = null
     },
+    setFiles: (state, action) => {
+      state.user = {
+        ...state.user,
+        profile: {
+          ...state.user.profile,
+          files: action.payload || []
+        }
+      }
+    },
     setProfile: (state, action) => {
       state.profile = action.payload
     },
@@ -28,6 +37,6 @@ export const appSlice = createSlice({
 })
 
 // Action creators are generated for each case reducer function
-export const { setUser, setToken, setProfile, setDraftProfile, setBot, setLoading } = appSlice.actions
+export const { setUser, setToken, setProfile, setDraftProfile, setBot, setFiles, setLoading } = appSlice.actions
 
 export default appSlice.reducer
