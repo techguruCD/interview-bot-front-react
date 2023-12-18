@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import axios from 'axios';
@@ -20,6 +20,7 @@ import { setUser } from './store/appSlice';
 
 import setAuthToken from './utils/setAuthToken';
 import './App.css';
+import WithNavbar from './layouts/WithNavbar';
 
 if (localStorage.token) {
   setAuthToken(localStorage.token)
@@ -27,6 +28,7 @@ if (localStorage.token) {
 
 function App() {
   const dispatch = useDispatch()
+  const loading = useSelector(state => state.app.loading)
   useEffect(() => {
     (async function () {
       if (localStorage.token) {
@@ -41,21 +43,37 @@ function App() {
     window.addEventListener('storage', () => {
       if (!localStorage.token) dispatch(setUser(null))
     })
-  })
+  }, [])
   return (
-    <Router>
-      <Toaster position='top-center' reverseOrder={false} />
-      <Navbar />
-      <Routes>
-        <Route exact path="/" element={<LandingPage />} />
-        <Route exact path="/signin" element={<PublicRoute><Signin /></PublicRoute>} />
-        <Route exact path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-        <Route exact path="/about" element={<About />} />
-        <Route exact path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-        <Route exact path="/chat" element={<PrivateRoute><ChatPage /></PrivateRoute>} />
-      </Routes>
-      <Footer />
-    </Router >
+    <>
+      <Router>
+        <Toaster position='top-center' reverseOrder={false} />
+        <Routes>
+          <Route path="/" element={<WithNavbar />}>
+            <Route exact path="/" element={<LandingPage />} />
+            <Route exact path="/signin" element={<PublicRoute><Signin /></PublicRoute>} />
+            <Route exact path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+            <Route exact path="/about" element={<About />} />
+            <Route exact path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+            <Route exact path="/:chatLink" element={<ChatPage />} />
+          </Route>
+        </Routes>
+        <Footer />
+      </Router >
+      {loading &&
+        <div className='fixed inset-0 z-50' style={{ backdropFilter: 'blur(5px)' }}>
+          <div className='flex w-full h-full justify-center items-center'>
+            <div
+              className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-orange-700 motion-reduce:animate-[spin_1.5s_linear_infinite]"
+              role="status">
+              <span
+                className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
+              >Loading...</span>
+            </div>
+          </div>
+        </div>
+      }
+    </>
   );
 }
 

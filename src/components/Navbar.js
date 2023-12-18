@@ -21,11 +21,11 @@ const menu = [
     path: "/profile",
     auth: 'private'
   },
-  {
-    title: "Chat",
-    path: "/chat",
-    auth: 'private'
-  },
+  // {
+  //   title: "Chat",
+  //   path: "/chat",
+  //   auth: 'private'
+  // },
   {
     title: "About",
     path: "/about",

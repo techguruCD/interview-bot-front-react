@@ -5,7 +5,9 @@ import { useSnackbar } from "notistack";
 import { Transition } from "@headlessui/react";
 import axios from 'axios';
 
-import AvatarImage from '../assets/images/avatar.png'
+import { ArchiveBoxXMarkIcon, ArrowPathRoundedSquareIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
+
+// import AvatarImage from '../assets/images/avatar.png'
 import { ReactComponent as Linkedin } from "../assets/images/svgs/linkedin.svg";
 import { ReactComponent as Website } from "../assets/images/svgs/website.svg";
 import { ReactComponent as Copy } from '../assets/images/svgs/copy.svg'
@@ -13,35 +15,42 @@ import { ReactComponent as Check } from "../assets/images/svgs/check.svg";
 import { ReactComponent as Pencil } from "../assets/images/svgs/pencil.svg";
 import { ReactComponent as Arrow } from "../assets/images/svgs/arrow.svg";
 import { ReactComponent as Close } from '../assets/images/svgs/close.svg'
+import InterviewerImage from '../assets/images/interviewer.png'
 
-import { setDraftProfile, setProfile } from '../store/appSlice'
+import { setLoading, setProfile } from '../store/appSlice'
 
 import showToaster from '../utils/showToaster'
+import convertJoiErrors2Errors from '../utils/convertJoiErrors2Errors';
 
 function ProfileModal({
   isOpen,
   onClose: handleClose,
   profile
 }) {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+
   const fileInput = useRef(null)
+  const avatarInput = useRef(null)
   const [name, setName] = useState('')
   const [headline, setHeadLine] = useState('')
   const [about, setAbout] = useState('')
-  const [website, setWebsite] = useState('')
   const [linkedin, setLinkedin] = useState('')
+  const [prompt, setPrompt] = useState('')
+  const [greeting, setGreeting] = useState('')
   const [avatar, setAvatar] = useState('')
-  const [isAvatarChanged, setIsAvatarChanged] = useState(false)
   const [file, setFile] = useState(null)
-  const [isFileChanged, setIsFileChanged] = useState(false)
+  const [errors, setErrors] = useState(null)
 
   useEffect(() => {
     if (isOpen) {
+      setAvatar(profile?.avatar || '')
       setName(profile?.name || '')
       setHeadLine(profile?.headline || '')
       setAbout(profile?.about || '')
-      setWebsite(profile?.website || '')
       setLinkedin(profile?.linkedin || '')
+      setPrompt(profile?.prompt || '')
+      setGreeting(profile?.greeting || '')
+      setFile(profile?.file || '')
     }
   }, [isOpen])
 
@@ -64,24 +73,43 @@ function ProfileModal({
   async function onFileChange(e) {
     const file = e.target?.files?.[0]
     if (!file) return;
+    dispatch(setLoading(true))
     let fileData = await convertFile2Base64(file)
     fileInput.current.value = null
     setFile(fileData)
-    setIsFileChanged(true)
+    dispatch(setLoading(false))
+  }
+
+  async function onAvatarChange(e) {
+    const file = e.target?.files?.[0]
+    if (!file) return;
+    dispatch(setLoading(true))
+    let fileData = await convertFile2Base64(file)
+    avatarInput.current.value = null
+    setAvatar(fileData)
+    dispatch(setLoading(false))
   }
 
   async function handleSubmit(e) {
-    e?.preventDefault()
+    e?.preventDefault();
+    dispatch(setLoading(true))
     try {
-      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/draft-profile', {
-        name, headline, about, website, linkedin, avatar, isFileChanged, file
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/update-profile', {
+        name, headline, about, linkedin, prompt, greeting, avatar, file
       })
-      dispatch(setDraftProfile(data.data))
+      dispatch(setProfile(data.data))
       showToaster(data?.message)
       handleClose()
+      setErrors(null)
     } catch (err) {
-      showToaster(err.response.data.message)
+      showToaster(err?.response?.data?.message)
+      if (err?.response?.data?.isJoi) {
+        setErrors(convertJoiErrors2Errors(err.response.data.errors))
+      } else {
+        setErrors(err?.response?.data?.errors)
+      }
     }
+    dispatch(setLoading(false))
   }
 
   return (
@@ -116,13 +144,27 @@ function ProfileModal({
             </div>
             <div className="scrollbar overflow-y-auto h-[75%] space-y-6 p-6">
               <div className="flex items-center space-x-6">
-                <div className="shrink-0">
-                  <img
-                    id="preview_img"
-                    className="h-32 w-32 rounded-full object-cover"
-                    src={avatar != '' ? avatar : AvatarImage}
-                    alt="User Avatar"
-                  />
+                <div className='w-full flex flex-col justify-center items-center'>
+                  <div className="shrink-0 h-32 w-32 flex justify-center items-center">
+                    <img
+                      id="preview_img"
+                      className="h-32 w-32 rounded-full object-cover"
+                      src={avatar ? (typeof (avatar) == 'string' ? process.env.REACT_APP_API_URL + avatar : avatar.data) : InterviewerImage}
+                      alt="User Avatar"
+                    />
+                    <input
+                      accept='.jpg, .jpeg, .png'
+                      type="file"
+                      ref={avatarInput}
+                      onChange={onAvatarChange}
+                      hidden={true}
+                    />
+                  </div>
+                  <div className='w-32 mt-2 px-2 flex justify-between'>
+                    <ArrowPathRoundedSquareIcon className="h-6 w-6 text-gray-500 cursor-pointer" onClick={() => setAvatar(profile?.avatar || null)} />
+                    <FolderOpenIcon className="h-6 w-6 text-gray-500 cursor-pointer" onClick={() => avatarInput.current.click()} />
+                    <ArchiveBoxXMarkIcon className="h-6 w-6 text-gray-500 cursor-pointer" onClick={() => setAvatar(null)} />
+                  </div>
                 </div>
               </div>
               <div className="mb-6">
@@ -140,6 +182,7 @@ function ProfileModal({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
+                {errors?.name && <label className="block text-rose-700 font-medium">{errors?.name}</label>}
               </div>
               <div className="mb-6">
                 <label
@@ -157,6 +200,7 @@ function ProfileModal({
                   value={headline}
                   onChange={(e) => setHeadLine(e.target.value)}
                 />
+                {errors?.headline && <label className="block text-rose-700 font-medium">{errors?.headline}</label>}
               </div>
               <div className="mb-6">
                 <label
@@ -173,22 +217,7 @@ function ProfileModal({
                   value={about}
                   onChange={(e) => setAbout(e.target.value)}
                 ></textarea>
-              </div>
-              <div className="mb-6">
-                <label
-                  htmlFor="website"
-                  className="mb-2 block text-base font-medium text-gray-900 dark:text-white"
-                >
-                  Website
-                </label>
-                <input
-                  type="text"
-                  id="website"
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                  placeholder="Your website link here."
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                />
+                {errors?.about && <label className="block text-rose-700 font-medium">{errors?.about}</label>}
               </div>
               <div className="mb-6">
                 <label
@@ -206,37 +235,59 @@ function ProfileModal({
                   value={linkedin}
                   onChange={(e) => setLinkedin(e.target.value)}
                 />
+                {errors?.linkedin && <label className="block text-rose-700 font-medium">{errors?.linkedin}</label>}
+              </div>
+              <div className="mb-6">
+                <label
+                  htmlFor="description"
+                  className="mb-2 block text-base font-medium text-gray-900 dark:text-white"
+                >
+                  Chat bot prompt
+                </label>
+                <textarea
+                  rows={4}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+                  placeholder="Chat bot prompt"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                ></textarea>
+                {errors?.prompt && <label className="block text-rose-700 font-medium">{errors?.prompt}</label>}
+              </div>
+              <div className="mb-6">
+                <label
+                  htmlFor="linkedin"
+                  className="mb-2 block text-base font-medium text-gray-900 dark:text-white"
+                >
+                  Chat bot greeting
+                </label>
+                <input
+                  type="text"
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+                  placeholder="Chat bot greeting here."
+                  required
+                  value={greeting}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                />
+                {errors?.greeting && <label className="block text-rose-700 font-medium">{errors?.greeting}</label>}
               </div>
               <div className='mb-6'>
-                <label className="mb-2 block text-base font-medium text-gray-900 dark:text-white">
-                  Attach file
+                <label className="mb-2 block text-base font-medium text-gray-900 dark:text-white flex">
+                  Attach file: {file ? (typeof (file) == 'string' ? <a href={process.env.REACT_APP_API_URL + file} className="text-indigo-600" target='_blank'>CLICK HERE</a> : file.name) : 'No File'}
+                  <div className='flex gap-4 ml-6'>
+                    <ArrowPathRoundedSquareIcon className="h-6 w-6 text-gray-500 cursor-pointer" onClick={() => setFile(profile?.file || null)} />
+                    <FolderOpenIcon className="h-6 w-6 text-gray-500 cursor-pointer" onClick={() => fileInput.current.click()} />
+                    <ArchiveBoxXMarkIcon className="h-6 w-6 text-gray-500 cursor-pointer" onClick={() => setFile(null)} />
+                  </div>
                 </label>
                 <input
                   accept='.pdf'
-                  id="file_input"
                   type="file"
                   ref={fileInput}
                   onChange={onFileChange}
-                  className="text-slate-500 block w-full text-sm file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:py-2 file:px-4 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+                  hidden
                 />
+                {errors?.file && <label className="block text-rose-700 font-medium">{errors?.file}</label>}
               </div>
-              {/* <div className="mb-6">
-              <label
-                htmlFor="greeting"
-                className="mb-2 block text-base font-medium text-gray-900 dark:text-white"
-              >
-                Greeting Sentence
-              </label>
-              <input
-                type="text"
-                id="greeting"
-                className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                placeholder="Your LinkedIn profile link here."
-                required
-                defaultValue={greeting}
-                onChange={(e) => setGreeting(e.target.value)}
-              />
-            </div> */}
             </div>
             <div className="h-[15%] flex items-center space-x-2 rounded-b border-t border-gray-200 p-6 dark:border-gray-600">
               <button
@@ -304,20 +355,7 @@ export default function ProfilePage() {
   const dispatch = useDispatch()
 
   const profile = useSelector(state => state.app.profile);
-  const draftProfile = useSelector(state => state.app.draftProfile)
-  const visibleProfile = useMemo(() => (draftProfile || profile), [profile, draftProfile])
   const [isProfileOpen, setIsProfileOpen] = useState(false)
-
-  async function onPublish() {
-    try {
-      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/publish-profile')
-      showToaster(data?.message)
-      dispatch(setProfile(data.data))
-      dispatch(setDraftProfile(null))
-    } catch (err) {
-      showToaster(err?.response?.data?.message)
-    }
-  }
 
   return (
     <div className="max-w-[1200px] px-[20px] mx-auto w-full mt-[25px]">
@@ -328,7 +366,7 @@ export default function ProfilePage() {
             Share
           </button>
         </div>
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <div className="flex items-center">
             <span className="text-sm text-gray-600">
               Don&apos;t forget to publish your latest updates
@@ -340,40 +378,34 @@ export default function ProfilePage() {
             <span>Publish</span>
             <Arrow width={16} />
           </button>
-        </div>
+        </div> */}
       </div>
 
       <div className="mt-[10px] flex flex-col p-5 border-[1px] rounded-md border-gray-200 gap-3">
         <div className="flex flex-col sm:flex-row justify-between w-full items-start gap-3">
           <div className="flex flex-row gap-6 items-center">
-            <img
-              src={visibleProfile?.avatar || AvatarImage}
-              className="w-[110px] h-[115px] rounded-full object-cover"
-              alt="avatar"
-            />
+            <div className='w-[110px] h-[115px] flex justify-center items-center'>
+              <img
+                src={profile?.avatar ? process.env.REACT_APP_API_URL + profile?.avatar : InterviewerImage}
+                className="w-[110px] h-[115px] rounded-full object-cover"
+                alt="avatar"
+              />
+            </div>
             <div className="flex flex-col gap-[2px]">
               <span className="text-[22px] font-[700] text-[#6355D8]">
-                {visibleProfile?.name}
+                {profile?.name}
               </span>
               <span className="text-[17px] text-gray-500 font-[500]">
-                {visibleProfile?.headline}
+                {profile?.headline}
               </span>
               <div className="flex flex-row gap-2 mt-[5px]">
                 <a
-                  href={visibleProfile?.linkedin}
+                  href={profile?.linkedin}
                   target="_blank"
                   className="cursor-pointer text-gray-700 hover:text-gray-950 transition-all"
                   rel="noreferrer"
                 >
                   <Linkedin width={18} />
-                </a>
-                <a
-                  href={visibleProfile?.website}
-                  target="_blank"
-                  className="cursor-pointer text-gray-700 hover:text-gray-950 transition-all my-auto"
-                  rel="noreferrer"
-                >
-                  <Website width={14} />
                 </a>
               </div>
             </div>
@@ -384,32 +416,27 @@ export default function ProfilePage() {
             onClick={() => setIsProfileOpen(true)}
           >
             <Pencil width={16} />
-            <span>Edit Public profile</span>
+            <span>Edit profile</span>
           </button>
         </div>
 
         <div className="mt-10 pb-[100px]">
           <span className="text-[20px] font-bold">About me</span>
-          <p className="mt-2 text-gray-700 font-[500]">{visibleProfile?.about}</p>
+          <p className="mt-2 text-gray-700 font-[500]">{profile?.about}</p>
         </div>
-        <div className="mt-10 pb-[20px]">
-          <label className="block">
-            <input
-              id="file_input"
-              type="file"
-              multiple
-              accept=".docx,.pdf"
-              // onChange={handleUpload}
-              className="text-slate-500 block w-full text-sm file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:py-2 file:px-4 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
-            />
-          </label>
-        </div>
+
+        {
+          profile?.file &&
+          <div className="mt-10 pb-[100px] text-[20px] font-bold">
+            To see attached CV: <a href={process.env.REACT_APP_API_URL + profile.file} target='_blank' className='text-indigo-600 underline'>CLICK HERE</a>
+          </div>
+        }
       </div>
 
       <ProfileModal
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
-        profile={visibleProfile}
+        profile={profile}
       />
     </div>
   )

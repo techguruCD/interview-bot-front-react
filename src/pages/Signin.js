@@ -10,7 +10,8 @@ import SocialLogins from '../components/SocialLogins'
 import setAuthToken from '../utils/setAuthToken';
 import toast from 'react-hot-toast';
 import showToaster from '../utils/showToaster';
-import { setUser } from '../store/appSlice';
+import { setUser, setLoading } from '../store/appSlice';
+import convertJoiErrors2Errors from '../utils/convertJoiErrors2Errors';
 
 export default function Signin() {
   const dispatch = useDispatch()
@@ -18,10 +19,11 @@ export default function Signin() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [errors, setErrors] = useState(null)
 
   const handleLogin = async () => {
+    dispatch(setLoading(true))
     try {
       const { data: { token } } = await axios.post(process.env.REACT_APP_API_URL + '/auth/signin/email', {
         email, password
@@ -32,8 +34,14 @@ export default function Signin() {
       navigate('/')
       toast.success('Logged in successfully')
     } catch (err) {
-      showToaster(err?.response?.data?.message)
+      showToaster(err?.response?.data?.message || { error: 'Please try again later' })
+      if (err?.response?.data?.isJoi) {
+        setErrors(convertJoiErrors2Errors(err.response.data.errors))
+      } else {
+        setErrors(err?.response?.data?.errors)
+      }
     }
+    dispatch(setLoading(false))
   }
 
   return (
@@ -44,10 +52,9 @@ export default function Signin() {
             <div className="mt-10 mb-10 w-[80%]">
               <p className="mb-8 text-center">Sign in</p>
 
-              <SocialLogins
-                // handleLoginResponse={handleLoginResponse}
-                setLoading={setLoading}
-              />
+              {/* <SocialLogins
+              // handleLoginResponse={handleLoginResponse}
+              /> */}
 
               <div className="mt-4">
                 <div className="mb-4">
@@ -59,8 +66,6 @@ export default function Signin() {
                   </label>
                   <input
                     type="email"
-                    id="email"
-                    name="email"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
@@ -69,6 +74,7 @@ export default function Signin() {
                     placeholder="example@example.com"
                     required
                   />
+                  {errors?.name && <label className="block text-rose-700 font-medium">{errors?.name}</label>}
                 </div>
                 <div className="mb-6 relative">
                   <label
@@ -77,37 +83,36 @@ export default function Signin() {
                   >
                     Password
                   </label>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    name="password"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                    }}
-                    className="w-full border-gray-300 border rounded-md px-3 py-2 focus:outline-none focus:border-blue-500"
-                    placeholder="Password"
-                    required
-                  />
-                  <button
-                    className="flex justify-around items-center"
-                    onClick={() => {
-                      setShowPassword(!showPassword);
-                    }}
-                  >
-                    <Icon
-                      className="absolute bottom-[10%] right-[4%]"
-                      icon={showPassword ? eye : eyeOff}
-                      size={25}
+                  <div className='relative'>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                      }}
+                      className="w-full border-gray-300 border rounded-md px-3 py-2 focus:outline-none focus:border-blue-500"
+                      placeholder="Password"
+                      required
                     />
-                  </button>
+                    <button
+                      className="flex justify-around items-center"
+                      onClick={() => {
+                        setShowPassword(!showPassword);
+                      }}
+                    >
+                      <Icon
+                        className="absolute bottom-[10%] right-[4%]"
+                        icon={showPassword ? eye : eyeOff}
+                        size={25}
+                      />
+                    </button>
+                  </div>
+                  {errors?.password && <label className="block text-rose-700 font-medium">{errors?.password}</label>}
                 </div>
                 <div className="flex items-center justify-between">
                   <button
                     onClick={handleLogin}
-                    className={`bg-[#6355D8] w-full text-white py-2 px-4 rounded-full hover:bg-[#6355D8] transition duration-300 ease-in-out ${loading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    disabled={loading}
+                    className={`bg-[#6355D8] w-full text-white py-2 px-4 rounded-full hover:bg-[#6355D8] transition duration-300 ease-in-out`}
                   >
                     Login
                   </button>

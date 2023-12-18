@@ -5,15 +5,16 @@ import showToaster from "../utils/showToaster";
 import { ReactComponent as MicrophoneSVG } from '../assets/images/svgs/microphone.svg'
 import { ReactComponent as AirplaneSVG } from '../assets/images/svgs/airplane.svg'
 import InterviewerImage from '../assets/images/interviewer.png'
-import LogoImage from '../assets/images/logo.png'
+// import LogoImage from '../assets/images/logo.png'
+import '../assets/css/message.css'
+import { useSelector } from "react-redux";
 
 const Message = ({
-  text,
+  text = '',
   avatar,
   isRight = false,
+  typing = false
 }) => {
-  if (!text) return <></>;
-
   return (
     <div
       className={cn({
@@ -21,9 +22,17 @@ const Message = ({
         "flex-row-reverse ml-auto": isRight,
       })}
     >
-      <img src={avatar} className="w-10 sm:w-12 md:w-14" />
-      <div className="px-4 py-3 sm:py-6 bg-[#6355D830] rounded-md font-[500] max-w-[600px]">
+      <img src={avatar} className="rounded-full w-10 sm:w-12 md:w-14" />
+      <div className={`px-4 py-3 sm:py-6 bg-[#6355D830] rounded-md font-[500] max-w-[600px] ${typing && 'typing'}`}>
         {text}
+        {
+          typing &&
+          <>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </>
+        }
       </div>
     </div>
   );
@@ -33,27 +42,26 @@ export default function ChatBox({
   greeting = "",
   prompt = "",
 }) {
+  const profile = useSelector(state => state.app.profile)
   const chatBoxRef = useRef(null);
   const [history, setHistory] = useState([]);
-
   const [payload, setPayload] = useState("");
+  const [typing, setTyping] = useState(false)
 
   const handleSend = async (e) => {
+    if (typing) return;
     const content = payload;
     setHistory([...history, { role: 'user', content }])
     setPayload('')
+    setTyping(true)
     axios.post(process.env.REACT_APP_API_URL + '/user/chat', { messages: [...history, { role: 'user', content: payload }].slice(-5) })
       .then(({ data }) => {
         setHistory([...history, { role: 'user', content }, { role: 'assistant', content: data.data }])
       }).catch(err => {
         showToaster(err?.response?.data?.message)
+      }).finally(() => {
+        setTyping(false)
       })
-    // try {
-    //   const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/chat', { message: payload })
-    //   addMessage('assistant', data.data)
-    // } catch (err) {
-    //   showToaster(err?.response?.data?.message)
-    // }
   };
 
   const scrollToBottom = () => {
@@ -77,18 +85,25 @@ export default function ChatBox({
         className="flex flex-col gap-3 sm:gap-8 mb-3 sm:mb-8 text-[14px] sm:text-[16px] max-h-[500px] overflow-y-auto scrollbar px-4"
       >
         {history &&
-          history
-            .flat()
-            .map((item, index) => (
-              <Message
-                text={item.content}
-                avatar={
-                  item.role == 'user' ? InterviewerImage : LogoImage
-                }
-                isRight={item.role == 'user'}
-                key={index}
-              />
-            ))}
+          history.flat().map((item, index) => (
+            <Message
+              text={item.content}
+              avatar={
+                item.role == 'user' ? InterviewerImage : profile?.avatar || InterviewerImage
+              }
+              isRight={item.role == 'user'}
+              key={index}
+            />
+          ))
+        }
+        {
+          typing &&
+          <Message
+            typing={true}
+            avatar={profile?.avatar || InterviewerImage}
+            isRight={false}
+          />
+        }
       </div>
       <div>
         <div className="flex items-center pr-4 gap-3 border-[1px] border-[#6355D8] rounded-md mt-5 sm:mt-0">

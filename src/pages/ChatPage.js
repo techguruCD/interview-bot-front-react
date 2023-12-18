@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Transition } from "@headlessui/react";
 
 import ChatBox from '../components/ChatBox';
@@ -8,23 +8,43 @@ import { cn } from '../utils';
 
 import { ReactComponent as SettingSVG } from '../assets/images/svgs/setting.svg'
 import { ReactComponent as CloseSVG } from '../assets/images/svgs/close.svg'
+import { setBot, setLoading } from '../store/appSlice';
+import axios from 'axios';
+import showToaster from '../utils/showToaster';
+import convertJoiErrors2Errors from '../utils/convertJoiErrors2Errors';
+import { useParams } from 'react-router-dom';
 
 function ConversationModal({ isOpen, onClose: handleClose, data }) {
+  const dispatch = useDispatch()
   const [prompt, setPrompt] = useState(data?.prompt);
   const [greeting, setGreeting] = useState(data?.greeting);
+  const [errors, setErrors] = useState(null)
 
   useEffect(() => {
     setPrompt(data?.prompt);
     setGreeting(data?.greeting);
   }, [data]);
 
-  const handleSubmit = () => {
-    // dispatch(setAvatar(imageUrl));
-    // handleSave({
-    //   prompt,
-    //   greeting,
-    // });
-    // handleClose();
+  const handleSubmit = async (e) => {
+    e?.preventDefault()
+    dispatch(setLoading(true))
+    try {
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/bot', {
+        prompt, greeting
+      })
+      dispatch(setBot(data.data))
+      showToaster(data?.message)
+      handleClose()
+      setErrors(null)
+    } catch (err) {
+      showToaster(err?.response?.data?.message || { error: "Please try again later." })
+      if (err?.response?.data?.isJoi) {
+        setErrors(convertJoiErrors2Errors(err.response.data.errors))
+      } else {
+        setErrors(err.response.data.errors)
+      }
+    }
+    dispatch(setLoading(false))
   };
   return (
     <Transition
@@ -113,6 +133,7 @@ function ConversationModal({ isOpen, onClose: handleClose, data }) {
 }
 
 export default function ChatPage() {
+  let { chatLink } = useParams()
   const bot = useSelector(state => state.app.bot)
   const [isConversationOpen, setIsConversationOpen] = useState(false);
   const greeting = useSelector((state) => state.app.bot?.greeting);
@@ -131,14 +152,9 @@ export default function ChatPage() {
     setIsConversationOpen(true);
   };
 
-  // const handleConversationSave = (data) => {
-  //   dispatch(setPrompt(data.prompt));
-  //   dispatch(setGreeting(data.greeting));
-  // };
-
-  // const closeConversationModal = () => {
-  //   setIsConversationOpen(false);
-  // };
+  useEffect(() => {
+    console.error(chatLink)
+  }, [])
   return (
     <div className="max-w-[1200px] px-[20px] mx-auto w-full mt-[25px]">
       <div className="mt-[50px] p-2 border-[1px] border-gray-200 rounded-md">
