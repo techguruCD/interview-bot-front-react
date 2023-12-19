@@ -31,7 +31,7 @@ export default function Signin() {
       setAuthToken(token)
       const { data: user } = await axios.get(process.env.REACT_APP_API_URL + '/user/me')
       dispatch(setUser(user))
-      navigate('/')
+      navigate('/profile')
       toast.success('Logged in successfully')
     } catch (err) {
       showToaster(err?.response?.data?.message || { error: 'Please try again later' })

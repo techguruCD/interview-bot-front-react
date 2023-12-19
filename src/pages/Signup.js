@@ -35,7 +35,7 @@ export default function Signup() {
       setAuthToken(token)
       const { data: user } = await axios.get(process.env.REACT_APP_API_URL + '/user/me')
       dispatch(setUser(user))
-      navigate('/')
+      navigate('/profile')
       toast.success('Registered successfully')
       setErrors(null)
     } catch (err) {

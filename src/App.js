@@ -55,7 +55,7 @@ function App() {
             <Route exact path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
             <Route exact path="/about" element={<About />} />
             <Route exact path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-            <Route exact path="/:chatLink" element={<ChatPage />} />
+            <Route exact path="/:chatId" element={<ChatPage />} />
           </Route>
         </Routes>
         <Footer />

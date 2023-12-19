@@ -316,7 +316,6 @@ function AttachmentFolder({
   const dispatch = useDispatch()
   const files = useSelector(state => state.app.user?.profile?.files)
   const fileInput = useRef(null)
-  console.error(files)
   async function onFileChange(e) {
     const file = e.target?.files?.[0]
     if (!file) return;
@@ -522,7 +521,17 @@ export default function ProfilePage() {
           <p className="mt-2 text-gray-700 font-[500]">{profile?.about}</p>
         </div>
 
-        <div className="mt-10 pb-[100px] text-[20px] font-bold">
+        <div className='mt-10 px-6'>
+          <ul className='list-disc'>
+            {(profile?.files || []).map((file, index) => (
+              <li key={index}>
+                <a href={process.env.REACT_APP_API_URL + file.path} className='underline' target='_blank'>{file.name}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-4 pb-[100px] text-[20px] font-bold">
           {/* To see attached CV: <a href={process.env.REACT_APP_API_URL + profile.file} target='_blank' className='text-indigo-600 underline'>CLICK HERE</a> */}
           <span className='max-w-64'>Provide your CV & Q&A documents so your bot knows your work history: </span>
           <span onClick={() => setIsAttachmentFolderOpen(true)} className="cursor-pointer text-rose-600 underline">Upload</span>

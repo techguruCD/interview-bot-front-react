@@ -1,185 +1,169 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { Transition } from "@headlessui/react";
-
-import ChatBox from '../components/ChatBox';
+import { useParams } from 'react-router-dom';
 
 import { cn } from '../utils';
-
-import { ReactComponent as SettingSVG } from '../assets/images/svgs/setting.svg'
-import { ReactComponent as CloseSVG } from '../assets/images/svgs/close.svg'
-import { setBot, setLoading } from '../store/appSlice';
 import axios from 'axios';
 import showToaster from '../utils/showToaster';
 import convertJoiErrors2Errors from '../utils/convertJoiErrors2Errors';
-import { useParams } from 'react-router-dom';
 
-function ConversationModal({ isOpen, onClose: handleClose, data }) {
-  const dispatch = useDispatch()
-  const [prompt, setPrompt] = useState(data?.prompt);
-  const [greeting, setGreeting] = useState(data?.greeting);
-  const [errors, setErrors] = useState(null)
+import { ReactComponent as MicrophoneSVG } from '../assets/images/svgs/microphone.svg'
+import { ReactComponent as AirplaneSVG } from '../assets/images/svgs/airplane.svg'
+import InterviewerImage from '../assets/images/interviewer.png'
+import { setLoading } from '../store/appSlice';
+import '../assets/css/message.css'
 
-  useEffect(() => {
-    setPrompt(data?.prompt);
-    setGreeting(data?.greeting);
-  }, [data]);
-
-  const handleSubmit = async (e) => {
-    e?.preventDefault()
-    dispatch(setLoading(true))
-    try {
-      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/bot', {
-        prompt, greeting
-      })
-      dispatch(setBot(data.data))
-      showToaster(data?.message)
-      handleClose()
-      setErrors(null)
-    } catch (err) {
-      showToaster(err?.response?.data?.message || { error: "Please try again later." })
-      if (err?.response?.data?.isJoi) {
-        setErrors(convertJoiErrors2Errors(err.response.data.errors))
-      } else {
-        setErrors(err.response.data.errors)
-      }
-    }
-    dispatch(setLoading(false))
-  };
+const Message = ({
+  text = '',
+  avatar,
+  isRight = false,
+  typing = false
+}) => {
   return (
-    <Transition
-      show={isOpen}
-      enter="transition-opacity duration-300"
-      enterFrom="opacity-0"
-      enterTo="opacity-100"
-      leave="transition-opacity duration-300"
-      leaveFrom="opacity-100"
-      leaveTo="opacity-0"
+    <div
+      className={cn({
+        "flex gap-4 items-center max-w-[90%]": true,
+        "flex-row-reverse ml-auto": isRight,
+      })}
     >
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div
-          className="fixed inset-0 bg-black opacity-60"
-          onClick={handleClose}
-        ></div>
-
-        <div className="relative h-[80%] w-full max-w-2xl rounded-lg bg-white shadow dark:bg-gray-700">
-          <div className="h-[15%] flex items-start justify-between rounded-t border-b p-4 dark:border-gray-600">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Configure Bot
-            </h3>
-            <button
-              type="button"
-              className="bg-transparent ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm text-gray-400 hover:text-gray-900 focus:outline-none dark:hover:bg-gray-600 dark:hover:text-white"
-              onClick={handleClose}
-            >
-              <CloseSVG width={24} height={24} />
-            </button>
-          </div>
-          <div className="scrollbar overflow-y-auto h-[70%] space-y-6 p-6">
-            <div className="mb-6">
-              <label
-                htmlFor="prompt"
-                className="mb-2 block text-base font-medium text-gray-900 dark:text-white"
-              >
-                Prompt
-              </label>
-              <textarea
-                id="prompt"
-                rows={12}
-                className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                placeholder="Write your prompt here..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-              ></textarea>
-            </div>
-            <div className="mb-6">
-              <label
-                htmlFor="greeting"
-                className="mb-2 block text-base font-medium text-gray-900 dark:text-white"
-              >
-                Greeting Sentence
-              </label>
-              <input
-                type="text"
-                id="greeting"
-                className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                placeholder="Your LinkedIn profile link here."
-                required
-                defaultValue={greeting}
-                onChange={(e) => setGreeting(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="h-[15%] flex items-center space-x-2 rounded-b border-t border-gray-200 p-6 dark:border-gray-600">
-            <button
-              type="button"
-              className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-              onClick={handleSubmit}
-            >
-              OK
-            </button>
-            <button
-              type="button"
-              className="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:z-10 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:ring-gray-600"
-              onClick={handleClose}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+      <img src={avatar} className="rounded-full w-10 sm:w-12 md:w-14" />
+      <div className={`px-4 py-3 sm:py-6 bg-[#6355D830] rounded-md font-[500] max-w-[600px] ${typing && 'typing'}`}>
+        {text}
+        {
+          typing &&
+          <>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </>
+        }
       </div>
-    </Transition>
-  )
-}
+    </div>
+  );
+};
 
 export default function ChatPage() {
-  let { chatLink } = useParams()
-  const bot = useSelector(state => state.app.bot)
-  const [isConversationOpen, setIsConversationOpen] = useState(false);
-  const greeting = useSelector((state) => state.app.bot?.greeting);
-  const prompt = useSelector((state) => state.app.boot?.prompt);
+  const dispatch = useDispatch()
+  let { chatId } = useParams()
+  const [profile, setProfile] = useState(null)
 
-  const [conversationModalData, setConversationModalData] = useState({
-    prompt: "",
-    greeting: "",
-  });
+  const [isValidChat, setIsValidChat] = useState(false)
+  const chatBoxRef = useRef(null);
+  const [history, setHistory] = useState([]);
+  const [payload, setPayload] = useState("");
+  const [typing, setTyping] = useState(false)
 
-  const handleConversationChange = () => {
-    setConversationModalData({
-      prompt,
-      greeting,
-    });
-    setIsConversationOpen(true);
+  const handleSend = async (e) => {
+    if (typing) return;
+    const content = payload;
+    setHistory([...history, { role: 'user', content }])
+    setPayload('')
+    setTyping(true)
+    axios.post(process.env.REACT_APP_API_URL + '/user/chat', { chatId, messages: [...history, { role: 'user', content: payload }].slice(-5) })
+      .then(({ data }) => {
+        setHistory([...history, { role: 'user', content }, { role: 'assistant', content: data.data }])
+      }).catch(err => {
+        showToaster(err?.response?.data?.message)
+      }).finally(() => {
+        setTyping(false)
+      })
+  };
+
+  const scrollToBottom = () => {
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
-    console.error(chatLink)
+    scrollToBottom();
+  }, [history]);
+
+  useEffect(() => {
+    (async function () {
+      dispatch(setLoading(true))
+      try {
+        const { data: { data } } = await axios.get(process.env.REACT_APP_API_URL + '/user/profile-greeting', { params: { chatId } })
+        setProfile(data)
+        setHistory([{ role: 'assistant', content: data.greeting }]);
+        setIsValidChat(true)
+      } catch (err) {
+        showToaster(err?.response?.data?.message || { error: 'Please try again later' })
+      }
+      dispatch(setLoading(false))
+    })()
   }, [])
+
+  if (!isValidChat) {
+    return <></>
+  }
   return (
     <div className="max-w-[1200px] px-[20px] mx-auto w-full mt-[25px]">
       <div className="mt-[50px] p-2 border-[1px] border-gray-200 rounded-md">
-        <div className="flex justify-between p-2 md:p-4 pb-2 sm:pb-6 border-b-[1px] border-gray-200 mb-[15px] sm:mb-[30px]">
-          <span className="font-bold text-[15px] sm:text-[20px]">
-            Chat to my interview bot
-          </span>
-          <button
-            className="text-[#6355D8] border-[#6355D8] bg-transparent border-[1px] rounded-md md:mr-10 px-1 md:px-5 py-1 hover:bg-[#6355D8] hover:text-white transition-all flex gap-2 items-center"
-            onClick={handleConversationChange}
+        <div className="flex min-h-[500px] flex-col w-full justify-between px-2 sm:px-10 mb-3 sm:mb-20">
+          <div className="flex justify-between p-2 md:p-4 pb-2 sm:pb-6 border-b-[1px] border-gray-200 mb-[15px] sm:mb-[30px]">
+            <span className="font-bold text-[15px] sm:text-[20px]">
+              Chat to {profile?.name}'s interview bot
+            </span>
+          </div>
+          <div
+            ref={chatBoxRef}
+            className="flex flex-col gap-3 sm:gap-8 mb-3 sm:mb-8 text-[14px] sm:text-[16px] max-h-[500px] overflow-y-auto scrollbar px-4"
           >
-            <SettingSVG width={18} />
-            <span className="hidden md:block">Configure interview bot</span>
-          </button>
+            {history &&
+              history.flat().map((item, index) => (
+                <Message
+                  text={item.content}
+                  avatar={
+                    (item.role == 'user' || !profile?.avatar) ? InterviewerImage : process.env.REACT_APP_API_URL + profile?.avatar
+                  }
+                  isRight={item.role == 'user'}
+                  key={index}
+                />
+              ))
+            }
+            {
+              typing &&
+              <Message
+                typing={true}
+                avatar={!(profile?.avatar) ? InterviewerImage : process.env.REACT_APP_API_URL + profile?.avatar}
+                isRight={false}
+              />
+            }
+          </div>
+          <div>
+            <div className="flex items-center pr-4 gap-3 border-[1px] border-[#6355D8] rounded-md mt-5 sm:mt-0">
+              <input
+                className="py-2 px-4 w-full bg-transparent"
+                placeholder="Send your message"
+                value={payload}
+                onChange={(e) => {
+                  setPayload(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+              />
+              <div className="flex gap-3 text-gray-500">
+                {/* <button>
+                  <MicrophoneSVG width={20} />
+                </button> */}
+                <button onClick={handleSend}>
+                  <AirplaneSVG width={20} className="-rotate-45" />
+                </button>
+              </div>
+            </div>
+            <p className="text-center mt-4 text-gray-600 text-[14px] sm:text-[16px]">
+              Interview Bot may produce inaccurate information about people, places,
+              of fact.{" "}
+              <span className="text-[#6355D8] underline">Privacy Notice</span>
+            </p>
+          </div>
         </div>
-
-        <ChatBox greeting={greeting} prompt={prompt} />
       </div>
-
-      <ConversationModal
-        isOpen={isConversationOpen}
-        onClose={() => setIsConversationOpen(false)}
-        data={bot}
-      // onSave={handleConversationSave}
-      />
     </div>
   )
 }

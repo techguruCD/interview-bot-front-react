@@ -108,7 +108,7 @@ const Navbar = () => {
                         if (item.title=='Logout') {
                           dispatch(setUser(null))
                           setAuthToken(null)
-                          navigate('/')
+                          // navigate('/')
                           return;
                         }
                         navigate(item.path)

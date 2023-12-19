@@ -19,13 +19,15 @@ export const appSlice = createSlice({
       else state.token = null
     },
     setFiles: (state, action) => {
+      const profile = {
+        ...state.user.profile,
+        files: action.payload || []
+      }
       state.user = {
         ...state.user,
-        profile: {
-          ...state.user.profile,
-          files: action.payload || []
-        }
+        profile
       }
+      state.profile = profile
     },
     setProfile: (state, action) => {
       state.profile = action.payload
