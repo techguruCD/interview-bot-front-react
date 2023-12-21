@@ -6,6 +6,8 @@ import axios from 'axios';
 
 import PrivateRoute from './components/routeHelper/PrivateRoute';
 import PublicRoute from './components/routeHelper/PublicRoute';
+import NormalRoute from './components/routeHelper/NormalRoute';
+import AdminRoute from './components/routeHelper/AdminRoute';
 
 import LandingPage from './pages/LandingPage';
 import Signin from './pages/Signin'
@@ -21,6 +23,8 @@ import { setUser } from './store/appSlice';
 import setAuthToken from './utils/setAuthToken';
 import './App.css';
 import WithNavbar from './layouts/WithNavbar';
+import UsersPage from './pages/admin/UsersPage';
+import SettingPage from './pages/admin/SettingPage';
 
 if (localStorage.token) {
   setAuthToken(localStorage.token)
@@ -33,7 +37,7 @@ function App() {
     (async function () {
       if (localStorage.token) {
         try {
-          const { data: user } = await axios.get(process.env.REACT_APP_API_URL + '/user/me')
+          const { data: user } = await axios.get(process.env.REACT_APP_API_URL + '/me')
           dispatch(setUser(user))
         } catch (err) {
           setAuthToken(null)
@@ -44,18 +48,22 @@ function App() {
       if (!localStorage.token) dispatch(setUser(null))
     })
   }, [])
+
   return (
     <>
       <Router>
         <Toaster position='top-center' reverseOrder={false} />
         <Routes>
           <Route path="/" element={<WithNavbar />}>
-            <Route exact path="/" element={<LandingPage />} />
+            <Route exact path="/" element={<NormalRoute><LandingPage /></NormalRoute>} />
             <Route exact path="/signin" element={<PublicRoute><Signin /></PublicRoute>} />
             <Route exact path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-            <Route exact path="/about" element={<About />} />
+            <Route exact path="/about" element={<NormalRoute><About /></NormalRoute>} />
             <Route exact path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
             <Route exact path="/:chatId" element={<ChatPage />} />
+
+            <Route exact path="/admin/users" element={<AdminRoute><UsersPage /></AdminRoute>} />
+            <Route exact path="/admin/setting" element={<AdminRoute><SettingPage /></AdminRoute>} />
           </Route>
         </Routes>
         <Footer />

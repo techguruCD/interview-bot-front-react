@@ -29,7 +29,7 @@ export default function Signin() {
         email, password
       })
       setAuthToken(token)
-      const { data: user } = await axios.get(process.env.REACT_APP_API_URL + '/user/me')
+      const { data: user } = await axios.get(process.env.REACT_APP_API_URL + '/me')
       dispatch(setUser(user))
       navigate('/profile')
       toast.success('Logged in successfully')

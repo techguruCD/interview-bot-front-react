@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../utils';
 
@@ -10,50 +10,91 @@ import { useDispatch, useSelector } from 'react-redux';
 import setAuthToken from '../utils/setAuthToken';
 import { setUser } from '../store/appSlice';
 
-const menu = [
-  {
-    title: "Home",
-    path: "/",
-    auth: 'normal'
-  },
-  {
-    title: "Profile",
-    path: "/profile",
-    auth: 'private'
-  },
-  // {
-  //   title: "Chat",
-  //   path: "/chat",
-  //   auth: 'private'
-  // },
-  {
-    title: "About",
-    path: "/about",
-    auth: 'normal'
-  },
-  {
-    title: "Blog",
-    path: "/#blog",
-    auth: 'normal'
-  },
-  {
-    title: "Login / Register",
-    path: "/signin",
-    auth: 'public'
-  },
-  {
-    title: "Logout",
-    path: "/signout",
-    auth: 'private'
-  }
-];
-
 const Navbar = () => {
   const dispatch = useDispatch()
   const isAuthenticated = useSelector(state => state.app.token)
+  const user = useSelector(state => state.app.user)
   const location = useLocation();
   const { pathname } = location;
   const navigate = useNavigate()
+  const menu = useMemo(() => {
+    if (!user) {
+      return [
+        {
+          title: "Home",
+          path: "/",
+          auth: 'normal'
+        },
+        {
+          title: "About",
+          path: "/about",
+          auth: 'normal'
+        },
+        {
+          title: "Blog",
+          path: "/#blog",
+          auth: 'normal'
+        },
+        {
+          title: "Login / Register",
+          path: "/signin",
+          auth: 'public'
+        }
+      ]
+    }
+    if (user.role !== 'ADMIN') {
+      return [
+        {
+          title: "Home",
+          path: "/",
+          auth: 'normal'
+        },
+        {
+          title: "Profile",
+          path: "/profile",
+          auth: 'private'
+        },
+        {
+          title: "About",
+          path: "/about",
+          auth: 'normal'
+        },
+        {
+          title: "Blog",
+          path: "/#blog",
+          auth: 'normal'
+        },
+        {
+          title: "Logout",
+          path: "/signout",
+          auth: 'private'
+        }
+      ]
+    } else {
+      return [
+        {
+          title: "Users",
+          path: "/admin/users",
+          auth: 'private'
+        },
+        {
+          title: "Blogs",
+          path: "/admin/blogs",
+          auth: 'normal'
+        },
+        {
+          title: "Setting",
+          path: "/admin/setting",
+          auth: 'normal'
+        },
+        {
+          title: "Logout",
+          path: "/signout",
+          auth: 'private'
+        }
+      ]
+    }
+  })
   // const router = useRouter();
   // const { userToken } = useGlobalState();
   // const dispatch = useGlobalDispatch();
@@ -92,9 +133,8 @@ const Navbar = () => {
             </div>
             <ul className="mx-[20px] mt-[3px] flex flex-col justify-center md:mx-[0px] md:mt-[0px] md:flex-row md:items-center">
               {menuItems &&
-                menuItems.filter(item => item.auth=='normal'||(item.auth=='private'&&isAuthenticated)||(item.auth=='public'&&!isAuthenticated))
-                .map((item, index) => {
-                  const selected = (item.path === pathname || (item.path == '/signin' && pathname == '/signup'));
+                menuItems.map((item, index) => {
+                  const selected = (item.path === pathname || (item.path === '/signin' && pathname === '/signup'));
                   // alert(selected)
                   return (
                     <li
@@ -105,10 +145,9 @@ const Navbar = () => {
                         "md:text-[#6355D8] md:border-[#6355D8]": selected,
                       })}
                       onClick={() => {
-                        if (item.title=='Logout') {
+                        if (item.title === 'Logout') {
                           dispatch(setUser(null))
                           setAuthToken(null)
-                          // navigate('/')
                           return;
                         }
                         navigate(item.path)
