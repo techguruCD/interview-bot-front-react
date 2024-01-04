@@ -149,6 +149,14 @@ const Navbar = () => {
                           dispatch(setUser(null))
                           setAuthToken(null)
                           return;
+                        } else if (item.title === "Blog") {
+                          if (pathname === '/') {
+                            const hash = window.location.hash
+                            if (hash) {
+                              const element = document.querySelector(hash)
+                              if (element) element.scrollIntoView({behavior: 'smooth'})
+                            }
+                          }
                         }
                         navigate(item.path)
                       }}

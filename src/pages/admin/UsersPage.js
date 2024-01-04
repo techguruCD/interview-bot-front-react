@@ -8,19 +8,6 @@ import InterviewerImage from '../../assets/images/interviewer.png'
 import { useDispatch } from 'react-redux'
 import { setLoading } from '../../store/appSlice'
 
-const people = [
-  {
-    name: 'Lindsay Walton',
-    title: 'Front-end Developer',
-    department: 'Optimization',
-    email: 'lindsay.walton@example.com',
-    role: 'Member',
-    image:
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  },
-  // More people...
-]
-
 export default function UsersPage() {
   const dispatch = useDispatch()
   const [setting, setSetting] = useState(null)
@@ -34,7 +21,7 @@ export default function UsersPage() {
   const getPage = async (page = 1) => {
     dispatch(setLoading(true))
     try {
-      const {data: {data}} = await axios.get(process.env.REACT_APP_API_URL + '/admin/users', {
+      const {data: {data}} = await axios.get(process.env.REACT_APP_API_URL + '/api/admin/users', {
         params: {
           page,
           pageSize
@@ -52,16 +39,6 @@ export default function UsersPage() {
 
   useEffect(() => {
     getPage();
-    (async function() {
-      dispatch(setLoading(true))
-      try {
-        const {data: { data }} = await axios.get(process.env.REACT_APP_API_URL + '/admin/setting')
-        setSetting(data)
-      } catch (err) {
-
-      }
-      dispatch(setLoading(false))
-    })()
   }, [])
 
   return (

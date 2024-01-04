@@ -25,6 +25,7 @@ import './App.css';
 import WithNavbar from './layouts/WithNavbar';
 import UsersPage from './pages/admin/UsersPage';
 import SettingPage from './pages/admin/SettingPage';
+import { BlogsPage } from './pages/admin/BlogsPage';
 
 if (localStorage.token) {
   setAuthToken(localStorage.token)
@@ -37,7 +38,7 @@ function App() {
     (async function () {
       if (localStorage.token) {
         try {
-          const { data: user } = await axios.get(process.env.REACT_APP_API_URL + '/me')
+          const { data: user } = await axios.get(process.env.REACT_APP_API_URL + '/api/me')
           dispatch(setUser(user))
         } catch (err) {
           setAuthToken(null)
@@ -63,6 +64,7 @@ function App() {
             <Route exact path="/:chatId" element={<ChatPage />} />
 
             <Route exact path="/admin/users" element={<AdminRoute><UsersPage /></AdminRoute>} />
+            <Route exact path="/admin/blogs" element={<AdminRoute><BlogsPage /></AdminRoute>} />
             <Route exact path="/admin/setting" element={<AdminRoute><SettingPage /></AdminRoute>} />
           </Route>
         </Routes>

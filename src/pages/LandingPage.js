@@ -1,5 +1,5 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import Slider from 'react-slick'
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -11,6 +11,18 @@ import TechSkillsImage from '../assets/images/techskills.svg'
 import SimpleToTrainImage from '../assets/images/simpletotrain.svg'
 import VirtualYouImage from '../assets/images/virtualyou.svg'
 import FriendsImage from '../assets/images/friends.svg'
+import { useSelector } from 'react-redux';
+import axios from 'axios';
+import EmptyImage from '../assets/images/emptyImage.png'
+import showToaster from '../utils/showToaster';
+import BlogModal from '../components/BlogModal';
+
+const sliderSettings = {
+  slidesToShow: 3,
+  slidesToScroll: 1,
+  dots: true,
+  infinite: false
+};
 
 const SimpleSlider = () => {
   const sliderSettings = {
@@ -253,6 +265,40 @@ const Benefits = () => {
 };
 
 export default function LandingPage() {
+  const isAuthenticated = useSelector(state => state.app.token)
+  const navigate = useNavigate()
+  const [blogs, setBlogs] = useState([])
+
+  const [isBlogModalOpen, setIsBlogModalOpen] = useState(false)
+  const [selectedBlog, setSelectedBlog] = useState(null)
+
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash) {
+      const element = document.querySelector(hash)
+      if (element) element.scrollIntoView({ behavior: 'smooth' })
+    }
+    axios.get(process.env.REACT_APP_API_URL + '/api/blogs').then(({ data }) => {
+      setBlogs(data.blogs)
+    }).catch(err => { })
+  }, [])
+  function makeInterviewBotClickedf() {
+    if (isAuthenticated) {
+      navigate('/profile')
+    } else {
+      navigate('/signup')
+    }
+  }
+  async function openBlog(id) {
+    try {
+      const { data: {blog} } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { id } })
+      setIsBlogModalOpen(true)
+      console.log(blog)
+      setSelectedBlog(blog)
+    } catch (err) {
+      showToaster(err?.response?.data?.message || { error: 'Please try again later' })
+    }
+  }
   return (
     <div id="home" className="mx-[20px] md:mx=[40px] lg:mx-32">
       <div className="mt-4 lg:mt-[12px] pb-2">
@@ -271,8 +317,8 @@ export default function LandingPage() {
               Less
             </p>
             <div className="flex justify-center lg:flex lg:justify-center 2xl:flex 2xl:justify-end ">
-              <Link to='/signup'
-                className="flex justify-center items-center mb-4 xl:mr-[-24rem] 2xl:mr-[-0px] whitespace-nowrap w-[270px] md:w-auto h-[60px] md:h-auto rounded-full border-[1px] text-[20px] md:text-[24px] font-semibold border-[#6355D8] text-[#6355D8] gap-2 p-4 lg:p-4"
+              <a onClick={makeInterviewBotClickedf}
+                className="flex cursor-pointer justify-center items-center mb-4 xl:mr-[-24rem] 2xl:mr-[-0px] whitespace-nowrap w-[270px] md:w-auto h-[60px] md:h-auto rounded-full border-[1px] text-[20px] md:text-[24px] font-semibold border-[#6355D8] text-[#6355D8] gap-2 p-4 lg:p-4"
               >
                 Make your Interview bot
                 <div className="hidden md:flex mt-[10px]">
@@ -299,7 +345,7 @@ export default function LandingPage() {
                     />
                   </svg>
                 </div>
-              </Link>
+              </a>
             </div>
           </div>
           <div className="flex justify-center h-[285px] w-[340px]  lg:h-[380px] lg:w-[540px]">
@@ -367,52 +413,37 @@ export default function LandingPage() {
                   interview process
                 </p>
               </div>
-              <div className="flex flex-wrap justify-center items-center xl:flex xl:flex-row xl:flex-nowrap gap-3">
-                <div className="flex flex-col justify-center items-center">
-                  <div className="bg-[#6355D8] rounded-lg w-[300px] lg:w-[310px] xl:w-[310px] 2xl:w-[380px] h-[277px]"></div>
-                  <p className="text-[28px] mb-[12px] font-medium leading-8 text-center ">
-                    Best Marketing Social Media
-                  </p>
-                  <p className="text-[20px] font-normal mb-[12px] leading-7 text-center ">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    Praesent rhoncus lectus nisi,{" "}
-                  </p>
-                  <p className="text-[20px] font-light text-center leading-6">
-                    August 19,2023
-                  </p>
-                </div>
-                <div className="flex flex-col justify-center items-center">
-                  <div className="bg-[#6355D8] rounded-lg w-[300px] lg:w-[310px] xl:w-[310px] 2xl:w-[380px] h-[277px]"></div>
-                  <p className="text-[28px] mb-[12px] text-center font-medium leading-8">
-                    Best Marketing Social Media
-                  </p>
-                  <p className="text-[20px] text-center font-normal mb-[12px] leading-7">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    Praesent rhoncus lectus nisi,{" "}
-                  </p>
-                  <p className="text-[20px] text-center font-light leading-6">
-                    August 19,2023
-                  </p>
-                </div>
-                <div className="flex flex-col justify-center items-center">
-                  <div className="bg-[#6355D8] rounded-lg w-[300px] lg:w-[310px] xl:w-[310px] 2xl:w-[380px] h-[277px]"></div>
-                  <p className="text-[28px] mb-[12px] text-center font-medium leading-8">
-                    Best Marketing Social Media
-                  </p>
-                  <p className="text-[20px] text-center font-normal mb-[12px] leading-7">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    Praesent rhoncus lectus nisi,{" "}
-                  </p>
-                  <p className="text-[20px] text-center font-light leading-6">
-                    August 19,2023
-                  </p>
-                </div>
-              </div>
+              {
+                !blogs.length && <div className='text-center text-lg text-gray-400'>No articles</div>
+              }
+              {
+                !!blogs.length && <Slider {...sliderSettings}>
+                  {
+                    blogs.map(blog => (
+                      <div key={blog.id} className="flex flex-col justify-center items-center">
+                        <div className='p-4'>
+                          <img className='rounded-xl' src={blog.image ? process.env.REACT_APP_API_URL + blog.image : EmptyImage} />
+                        </div>
+                        <p onClick={() => openBlog(blog.id)}
+                          className="cursor-pointer text-[28px] underline mb-[12px] font-medium leading-8 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
+                          {blog.title}
+                        </p>
+                        <p className="text-[20px] font-normal mb-[12px] leading-7 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
+                          {blog.content}
+                        </p>
+                        <p className="text-[20px] font-light text-center leading-6">
+                          August 19,2023
+                        </p>
+                      </div>
+                    ))
+                  }
+                </Slider>
+              }
             </div>
           </div>
         </section>
-        <></>
       </div>
+      <BlogModal blog={selectedBlog} isOpen={isBlogModalOpen} handleClose={() => setIsBlogModalOpen(false)}/>
     </div>
   )
 }

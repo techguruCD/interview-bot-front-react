@@ -54,7 +54,7 @@ export default function ChatBox({
     setHistory([...history, { role: 'user', content }])
     setPayload('')
     setTyping(true)
-    axios.post(process.env.REACT_APP_API_URL + '/user/chat', { messages: [...history, { role: 'user', content: payload }].slice(-5) })
+    axios.post(process.env.REACT_APP_API_URL + '/api/user/chat', { messages: [...history, { role: 'user', content: payload }].slice(-5) })
       .then(({ data }) => {
         setHistory([...history, { role: 'user', content }, { role: 'assistant', content: data.data }])
       }).catch(err => {

@@ -14,7 +14,7 @@ export default function SettingPage() {
     const loadSetting = async () => {
         dispatch(setLoading(true))
         try {
-            const {data: { data }} = await axios.get(process.env.REACT_APP_API_URL + '/admin/setting')
+            const {data: { data }} = await axios.get(process.env.REACT_APP_API_URL + '/api/admin/setting')
             setUsersLimit(data.usersLimit)
             setSitePrompt(data.sitePrompt)
         } catch (err) {
@@ -27,7 +27,7 @@ export default function SettingPage() {
         e?.preventDefault()
         dispatch(setLoading(true))
         try {
-            const {data} = await axios.post(process.env.REACT_APP_API_URL + '/admin/setting', {
+            const {data} = await axios.post(process.env.REACT_APP_API_URL + '/api/admin/setting', {
                 usersLimit, sitePrompt
             })
             setErrors(null)

@@ -17,16 +17,20 @@ const Message = ({
   text = '',
   avatar,
   isRight = false,
-  typing = false
+  typing = false,
+  name = ''
 }) => {
   return (
     <div
       className={cn({
-        "flex gap-4 items-center max-w-[90%]": true,
-        "flex-row-reverse ml-auto": isRight,
+        "flex gap-4 items-center max-w-[90%] flex-col md:flex-row mt-4 md:mt-2": true,
+        "md:flex-row-reverse md:ml-auto": isRight,
       })}
     >
-      <img src={avatar} className="rounded-full w-10 sm:w-12 md:w-14" />
+      <div className='flex flex-col items-center text-center font-bold'>
+        <img src={avatar} className="rounded-full w-10 sm:w-12 md:w-14" />
+        {name}
+      </div>
       <div className={`px-4 py-3 sm:py-6 bg-[#6355D830] rounded-md font-[500] max-w-[600px] ${typing && 'typing'}`}>
         {text}
         {
@@ -59,7 +63,7 @@ export default function ChatPage() {
     setHistory([...history, { role: 'user', content }])
     setPayload('')
     setTyping(true)
-    axios.post(process.env.REACT_APP_API_URL + '/user/chat', { chatId, messages: [...history, { role: 'user', content: payload }].slice(-5) })
+    axios.post(process.env.REACT_APP_API_URL + '/api/user/chat', { chatId, messages: [...history, { role: 'user', content: payload }].slice(-5) })
       .then(({ data }) => {
         setHistory([...history, { role: 'user', content }, { role: 'assistant', content: data.data }])
       }).catch(err => {
@@ -83,7 +87,7 @@ export default function ChatPage() {
     (async function () {
       dispatch(setLoading(true))
       try {
-        const { data: { data } } = await axios.get(process.env.REACT_APP_API_URL + '/user/profile-greeting', { params: { chatId } })
+        const { data: { data } } = await axios.get(process.env.REACT_APP_API_URL + '/api/user/profile-greeting', { params: { chatId } })
         setProfile(data)
         setHistory([{ role: 'assistant', content: data.greeting }]);
         setIsValidChat(true)
@@ -108,7 +112,7 @@ export default function ChatPage() {
           </div>
           <div
             ref={chatBoxRef}
-            className="flex flex-col gap-3 sm:gap-8 mb-3 sm:mb-8 text-[14px] sm:text-[16px] max-h-[500px] overflow-y-auto scrollbar px-4"
+            className="flex flex-col items-center md:items-start gap-3 sm:gap-8 mb-3 sm:mb-8 text-[14px] sm:text-[16px] max-h-[500px] overflow-y-auto scrollbar px-4"
           >
             {history &&
               history.flat().map((item, index) => (
@@ -119,6 +123,7 @@ export default function ChatPage() {
                   }
                   isRight={item.role == 'user'}
                   key={index}
+                  name={item.role == 'user' ? <>Interview Bot<br />(You)</> : profile?.name}
                 />
               ))
             }
@@ -128,6 +133,7 @@ export default function ChatPage() {
                 typing={true}
                 avatar={!(profile?.avatar) ? InterviewerImage : process.env.REACT_APP_API_URL + profile?.avatar}
                 isRight={false}
+                name={profile?.name}
               />
             }
           </div>

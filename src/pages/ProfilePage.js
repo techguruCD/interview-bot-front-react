@@ -69,7 +69,7 @@ function ProfileModal({
     e?.preventDefault();
     dispatch(setLoading(true))
     try {
-      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/update-profile', {
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/api/user/update-profile', {
         name, headline, about, linkedin, prompt, greeting, avatar
       })
       dispatch(setProfile(data.data))
@@ -77,7 +77,7 @@ function ProfileModal({
       handleClose()
       setErrors(null)
     } catch (err) {
-      showToaster(err?.response?.data?.message)
+      showToaster(err?.response?.data?.message || {error: 'Please try again later'})
       if (err?.response?.data?.isJoi) {
         setErrors(convertJoiErrors2Errors(err.response.data.errors))
       } else {
@@ -323,7 +323,7 @@ function AttachmentFolder({
     let fileData = await convertFile2Base64(file)
     fileInput.current.value = null
     try {
-      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/add-file', fileData)
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/api/user/add-file', fileData)
       dispatch(setFiles(data.data))
       showToaster(data.message)
     } catch (err) {
@@ -334,7 +334,7 @@ function AttachmentFolder({
   async function onDeleteFile(fileId) {
     dispatch(setLoading(true))
     try {
-      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/user/delete-file', { id: fileId })
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/api/user/delete-file', { id: fileId })
       dispatch(setFiles(data.data))
       showToaster(data.message)
     } catch (err) {
@@ -378,7 +378,7 @@ function AttachmentFolder({
                   <PlusCircleIcon className='w-6 mr-2' /> Add File
                 </div>
                 <input
-                  accept='.pdf'
+                  accept='.pdf, .docx'
                   type="file"
                   ref={fileInput}
                   onChange={onFileChange}

@@ -26,14 +26,14 @@ export default function Signup() {
   const handleSignUp = async () => {
     dispatch(setLoading(true))
     try {
-      await axios.post(process.env.REACT_APP_API_URL + '/auth/signup/email', {
+      await axios.post(process.env.REACT_APP_API_URL + '/api/auth/signup/email', {
         name, email, password
       })
-      const { data: { token } } = await axios.post(process.env.REACT_APP_API_URL + '/auth/signin/email', {
+      const { data: { token } } = await axios.post(process.env.REACT_APP_API_URL + '/api/auth/signin/email', {
         email, password
       })
       setAuthToken(token)
-      const { data: user } = await axios.get(process.env.REACT_APP_API_URL + '/me')
+      const { data: user } = await axios.get(process.env.REACT_APP_API_URL + '/api/me')
       dispatch(setUser(user))
       navigate('/profile')
       toast.success('Registered successfully')
