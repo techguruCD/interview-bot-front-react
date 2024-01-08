@@ -56,6 +56,7 @@ export default function ChatPage() {
   const [history, setHistory] = useState([]);
   const [payload, setPayload] = useState("");
   const [typing, setTyping] = useState(false)
+  const [interviewerIndex, setInterviewerIndex] = useState(0)
 
   const handleSend = async (e) => {
     if (typing) return;
@@ -63,7 +64,7 @@ export default function ChatPage() {
     setHistory([...history, { role: 'user', content }])
     setPayload('')
     setTyping(true)
-    axios.post(process.env.REACT_APP_API_URL + '/api/user/chat', { chatId, messages: [...history, { role: 'user', content: payload }].slice(-5) })
+    axios.post(process.env.REACT_APP_API_URL + '/api/user/chat', { chatId, interviewerIndex, messages: [...history, { role: 'user', content: payload }].slice(-5) })
       .then(({ data }) => {
         setHistory([...history, { role: 'user', content }, { role: 'assistant', content: data.data }])
       }).catch(err => {
@@ -87,10 +88,11 @@ export default function ChatPage() {
     (async function () {
       dispatch(setLoading(true))
       try {
-        const { data: { data } } = await axios.get(process.env.REACT_APP_API_URL + '/api/user/profile-greeting', { params: { chatId } })
+        const { data: { data, interviewerIndex } } = await axios.post(process.env.REACT_APP_API_URL + '/api/user/chat-init', { chatId })
         setProfile(data)
         setHistory([{ role: 'assistant', content: data.greeting }]);
         setIsValidChat(true)
+        setInterviewerIndex(interviewerIndex)
       } catch (err) {
         showToaster(err?.response?.data?.message || { error: 'Please try again later' })
       }
