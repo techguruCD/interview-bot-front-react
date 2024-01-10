@@ -25,7 +25,9 @@ import './App.css';
 import WithNavbar from './layouts/WithNavbar';
 import UsersPage from './pages/admin/UsersPage';
 import SettingPage from './pages/admin/SettingPage';
-import { BlogsPage } from './pages/admin/BlogsPage';
+import BlogsPage from './pages/admin/BlogsPage';
+import ChatBotPage from './pages/admin/ChatBotPage';
+import ChatBot from './components/ChatBot';
 
 if (localStorage.token) {
   setAuthToken(localStorage.token)
@@ -65,11 +67,13 @@ function App() {
 
             <Route exact path="/admin/users" element={<AdminRoute><UsersPage /></AdminRoute>} />
             <Route exact path="/admin/blogs" element={<AdminRoute><BlogsPage /></AdminRoute>} />
+            <Route exact path="/admin/chatbot" element={<AdminRoute><ChatBotPage /></AdminRoute>} />
             <Route exact path="/admin/setting" element={<AdminRoute><SettingPage /></AdminRoute>} />
           </Route>
         </Routes>
         <Footer />
       </Router >
+      <ChatBot />
       {loading &&
         <div className='fixed inset-0 z-50' style={{ backdropFilter: 'blur(5px)' }}>
           <div className='flex w-full h-full justify-center items-center'>
