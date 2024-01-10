@@ -169,7 +169,7 @@ function BlogCreateModal({ isOpen, handleClose, onSuccess }) {
   )
 }
 
-export function BlogsPage() {
+export default function BlogsPage() {
   const dispatch = useDispatch()
 
   const [page, setPage] = useState(1)

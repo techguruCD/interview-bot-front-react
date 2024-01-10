@@ -83,6 +83,11 @@ const Navbar = () => {
           auth: 'normal'
         },
         {
+          title: "Chatbot",
+          path: "/admin/chatbot",
+          auth: 'private'
+        },
+        {
           title: "Setting",
           path: "/admin/setting",
           auth: 'normal'
