@@ -1,10 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Transition } from "@headlessui/react";
 import { ReactComponent as Close } from '../assets/images/svgs/close.svg'
+import Editor from './Editor';
 
 export default function BlogModal({
   isOpen, handleClose, blog
 }) {
+  useEffect(() => {
+    if (isOpen) {
+
+    }
+  }, [isOpen])
   return (
     <Transition
       show={isOpen}
@@ -50,10 +56,11 @@ export default function BlogModal({
                 </div>
               </div>
             }
-            <div className="mb-6 text-wrap w-full font-bold text-xl" style={{overflowWrap: 'anywhere'}}>
+            <div className="mb-6 text-wrap w-full font-bold text-xl text-center" style={{overflowWrap: 'anywhere'}}>
               {blog?.title}
             </div>
-            <div className="mb-6 whitespace-pre-line" style={{overflowWrap: 'anywhere'}}>{blog?.content}</div>
+            <Editor editable={false} defaultState={blog?.content}/>
+            {/* <div className="mb-6 whitespace-pre-line" style={{overflowWrap: 'anywhere'}}>{blog?.content}</div> */}
           </div>
           <div className="h-[15%] flex items-center space-x-2 rounded-b border-t border-gray-200 p-6 dark:border-gray-600">
             <button

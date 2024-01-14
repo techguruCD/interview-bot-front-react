@@ -593,7 +593,7 @@ export default function ProfilePage() {
                         {question.interviewerIndex}
                       </td>
                       <td className="px-3 py-5 text-sm text-gray-500 break-all whitespace-normal">
-                        <span class="font-bold">{question.question}</span><br/>
+                        <span className="font-bold">{question.question}</span><br/>
                         {question.answer}
                       </td>
                     </tr>

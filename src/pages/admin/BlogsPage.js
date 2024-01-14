@@ -14,6 +14,7 @@ import { ArchiveBoxXMarkIcon, ArrowPathRoundedSquareIcon, FolderOpenIcon, PlusCi
 import convertJoiErrors2Errors from '../../utils/convertJoiErrors2Errors'
 import moment from 'moment'
 import BlogModal from '../../components/BlogModal'
+import Editor from '../../components/Editor'
 
 function BlogCreateModal({ isOpen, handleClose, onSuccess }) {
   const dispatch = useDispatch()
@@ -22,6 +23,7 @@ function BlogCreateModal({ isOpen, handleClose, onSuccess }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [errors, setErrors] = useState(null)
+  const [editorContent, setEditorContent] = useState('')
 
   async function onImageChange(e) {
     const file = e.target?.files?.[0]
@@ -33,12 +35,23 @@ function BlogCreateModal({ isOpen, handleClose, onSuccess }) {
     dispatch(setLoading(false))
   }
 
+  function editorChanged(value) {
+    setEditorContent(value)
+    try {
+      console.log(value?.root?.children[0].children.length === 0)
+      return value?.root?.children[0].children.length === 0;
+    } catch (err) {
+      console.error(err)
+      return true
+    }
+  }
+
   async function handleSubmit(e) {
     e?.preventDefault();
     dispatch(setLoading(true))
     try {
       const { data } = await axios.post(process.env.REACT_APP_API_URL + '/api/admin/create-blog', {
-        title, content, image
+        title, content: JSON.stringify(editorContent), image
       })
       // dispatch(setProfile(data.data))
       showToaster(data?.message)
@@ -75,7 +88,7 @@ function BlogCreateModal({ isOpen, handleClose, onSuccess }) {
           onClick={handleClose}
         ></div>
 
-        <div className="relative h-[90%] w-full max-w-2xl rounded-lg bg-white shadow dark:bg-gray-700">
+        <div className="relative h-[90%] w-full md:max-w-[90%] rounded-lg bg-white shadow dark:bg-gray-700">
           <div className="h-[10%] flex items-start justify-between rounded-t border-b p-4 dark:border-gray-600">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               Create a blog
@@ -136,14 +149,15 @@ function BlogCreateModal({ isOpen, handleClose, onSuccess }) {
               >
                 Content
               </label>
-              <textarea
+              <Editor onChange={editorChanged} className="border" />
+              {/* <textarea
                 id="description"
                 rows={4}
                 className="block grow w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
                 placeholder="Blog content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-              ></textarea>
+              ></textarea> */}
               {errors?.content && <label className="block text-rose-700 font-medium">{errors?.content}</label>}
             </div>
           </div>
@@ -213,7 +227,7 @@ export default function BlogsPage() {
 
   async function openBlog(id) {
     try {
-      const { data: {blog} } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { id } })
+      const { data: { blog } } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { id } })
       setIsBlogModalOpen(true)
       console.log(blog)
       setSelectedBlog(blog)
@@ -253,10 +267,10 @@ export default function BlogsPage() {
                       Title
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Status
+                      Created At
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      
+
                     </th>
                     <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
                       <span className="sr-only"></span>
@@ -271,13 +285,15 @@ export default function BlogsPage() {
                           <div className="h-11 w-11 flex-shrink-0">
                             <img className="h-11 w-11 rounded-md" src={blog.image ? (process.env.REACT_APP_API_URL + blog.image) : EmptyImage} alt="" />
                           </div>
-                          <div className="ml-4">
+                          {/* <div className="ml-4">
                             <div className="font-medium text-gray-900 max-w-[150px] whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer underline" onClick={() => openBlog(blog.id)}>{blog.title}</div>
-                          </div>
+                          </div> */}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
-                        <div className="text-gray-900 max-w-[250px] whitespace-nowrap overflow-hidden text-ellipsis">{blog.content}</div>
+                        {/* <div className="text-gray-900 max-w-[250px] whitespace-nowrap overflow-hidden text-ellipsis">{blog.content}</div> */}
+                        <div className="text-gray-900 max-w-[250px] whitespace-nowrap overflow-hidden text-ellipsis underline cursor-pointer" onClick={() => openBlog(blog.id)}>{blog.title}</div>
+                        {/* <div className="text-gray-900 max-w-[250px] whitespace-nowrap overflow-hidden text-ellipsis">{blog.content}</div> */}
                       </td>
                       <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">{moment.utc(blog.createdAt).local().format('yyyy-MM-DD HH:mm:ss')}</td>
                       <td className="relative whitespace-nowrap py-5 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
@@ -295,7 +311,7 @@ export default function BlogsPage() {
         <Pagination totalCount={totalCount} totalPage={totalPage} page={page} from={pageSize * (page - 1) + 1} to={pageSize * (page - 1) + blogs.length} getPage={getPage} />
       </div>
       <BlogCreateModal isOpen={isBlogCreateModalOpen} handleClose={() => setIsBlogCreateModalOpen(false)} onSuccess={() => getPage(page)} />
-      <BlogModal blog={selectedBlog} isOpen={isBlogModalOpen} handleClose={() => setIsBlogModalOpen(false)}/>
+      <BlogModal blog={selectedBlog} isOpen={isBlogModalOpen} handleClose={() => setIsBlogModalOpen(false)} />
     </div>
   )
 }

@@ -58,8 +58,8 @@ export default function ChatBotPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {questions.map((question) => (
-                    <tr key={question.email}>
+                  {questions.map((question, index) => (
+                    <tr key={index}>
                       <td className="whitespace-nowrap py-5 pl-4 pr-3 text-sm sm:pl-0">
                         {moment.utc(question.createdAt).local().format('yyyy-MM-DD HH:mm:ss')}
                       </td>
@@ -67,7 +67,7 @@ export default function ChatBotPage() {
                         {question.chatbotIndex}
                       </td>
                       <td className="px-3 py-5 text-sm text-gray-500 break-all whitespace-normal">
-                        <span class="font-bold">{question.question}</span><br />
+                        <span className="font-bold">{question.question}</span><br />
                         {question.answer}
                       </td>
                     </tr>

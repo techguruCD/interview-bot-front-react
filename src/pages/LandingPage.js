@@ -428,9 +428,9 @@ export default function LandingPage() {
                           className="cursor-pointer text-[28px] underline mb-[12px] font-medium leading-8 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
                           {blog.title}
                         </p>
-                        <p className="text-[20px] font-normal mb-[12px] leading-7 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
+                        {/* <p className="text-[20px] font-normal mb-[12px] leading-7 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
                           {blog.content}
-                        </p>
+                        </p> */}
                         <p className="text-[20px] font-light text-center leading-6">
                           August 19,2023
                         </p>
