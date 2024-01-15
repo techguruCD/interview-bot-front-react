@@ -419,18 +419,20 @@ export default function LandingPage() {
               {
                 !!blogs.length && <Slider {...sliderSettings}>
                   {
-                    blogs.map(blog => (
-                      <div key={blog.id} className="flex flex-col justify-center items-center">
+                    blogs.map((blog, index) => (
+                      <div key={index} className="flex flex-col justify-center items-center">
                         <div className='p-4'>
-                          <img className='rounded-xl' src={blog.image ? process.env.REACT_APP_API_URL + blog.image : EmptyImage} />
+                          <a target='_blank' href={'/blogs/' + blog.id}>
+                            <img className='rounded-xl' src={blog.image ? process.env.REACT_APP_API_URL + blog.image : EmptyImage} />
+                          </a>
                         </div>
-                        <p onClick={() => openBlog(blog.id)}
+                        <p
                           className="cursor-pointer text-[28px] underline mb-[12px] font-medium leading-8 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
-                          {blog.title}
+                          <a target='_blank' href={'/blogs/' + blog.id}>{blog.title}</a>
                         </p>
-                        <p className="text-[20px] font-normal mb-[12px] leading-7 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
+                        {/* <p className="text-[20px] font-normal mb-[12px] leading-7 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
                           {blog.content}
-                        </p>
+                        </p> */}
                         <p className="text-[20px] font-light text-center leading-6">
                           August 19,2023
                         </p>

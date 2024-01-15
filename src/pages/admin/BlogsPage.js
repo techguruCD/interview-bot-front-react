@@ -14,6 +14,8 @@ import { ArchiveBoxXMarkIcon, ArrowPathRoundedSquareIcon, FolderOpenIcon, PlusCi
 import convertJoiErrors2Errors from '../../utils/convertJoiErrors2Errors'
 import moment from 'moment'
 import BlogModal from '../../components/BlogModal'
+import Editor1 from '../../components/Editor'
+import { Link } from 'react-router-dom'
 
 function BlogCreateModal({ isOpen, handleClose, onSuccess }) {
   const dispatch = useDispatch()
@@ -136,14 +138,15 @@ function BlogCreateModal({ isOpen, handleClose, onSuccess }) {
               >
                 Content
               </label>
-              <textarea
+              {/* <textarea
                 id="description"
                 rows={4}
                 className="block grow w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
                 placeholder="Blog content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-              ></textarea>
+              ></textarea> */}
+              <Editor1 onChange={setContent}/>
               {errors?.content && <label className="block text-rose-700 font-medium">{errors?.content}</label>}
             </div>
           </div>
@@ -213,7 +216,7 @@ export default function BlogsPage() {
 
   async function openBlog(id) {
     try {
-      const { data: {blog} } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { id } })
+      const { data: { blog } } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { id } })
       setIsBlogModalOpen(true)
       console.log(blog)
       setSelectedBlog(blog)
@@ -231,13 +234,13 @@ export default function BlogsPage() {
       <div className='border rounded-md border-gray-200 p-6'>
         <div className="sm:flex sm:items-center">
           <div className="mt-4 ml-auto">
-            <button
-              onClick={() => setIsBlogCreateModalOpen(true)}
+            <Link
+              to={'/blogs/new'}
               type="button"
               className="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Add Blog
-            </button>
+              Create Blog
+            </Link>
           </div>
         </div>
         <div className="mt-8 flow-root">
@@ -247,16 +250,16 @@ export default function BlogsPage() {
                 <thead>
                   <tr>
                     <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                      Name
+                      Thumbnail
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Title
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Status
+                      Created At
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      
+
                     </th>
                     <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
                       <span className="sr-only"></span>
@@ -272,12 +275,13 @@ export default function BlogsPage() {
                             <img className="h-11 w-11 rounded-md" src={blog.image ? (process.env.REACT_APP_API_URL + blog.image) : EmptyImage} alt="" />
                           </div>
                           <div className="ml-4">
-                            <div className="font-medium text-gray-900 max-w-[150px] whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer underline" onClick={() => openBlog(blog.id)}>{blog.title}</div>
+                            {/* <div className="font-medium text-gray-900 max-w-[150px] whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer underline" onClick={() => openBlog(blog.id)}>{blog.title}</div> */}
+                            <Link className="font-medium text-gray-900 max-w-[150px] whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer underline" to={'/blogs/' + blog.id}>{blog.title}</Link>
                           </div>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
-                        <div className="text-gray-900 max-w-[250px] whitespace-nowrap overflow-hidden text-ellipsis">{blog.content}</div>
+                        <div className="text-gray-900 max-w-[250px] whitespace-nowrap overflow-hidden text-ellipsis"><Link className='cursor-pointer underline' to={'/blogs/' + blog.id}>{blog.title}</Link></div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">{moment.utc(blog.createdAt).local().format('yyyy-MM-DD HH:mm:ss')}</td>
                       <td className="relative whitespace-nowrap py-5 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
@@ -295,7 +299,7 @@ export default function BlogsPage() {
         <Pagination totalCount={totalCount} totalPage={totalPage} page={page} from={pageSize * (page - 1) + 1} to={pageSize * (page - 1) + blogs.length} getPage={getPage} />
       </div>
       <BlogCreateModal isOpen={isBlogCreateModalOpen} handleClose={() => setIsBlogCreateModalOpen(false)} onSuccess={() => getPage(page)} />
-      <BlogModal blog={selectedBlog} isOpen={isBlogModalOpen} handleClose={() => setIsBlogModalOpen(false)}/>
+      <BlogModal blog={selectedBlog} isOpen={isBlogModalOpen} handleClose={() => setIsBlogModalOpen(false)} />
     </div>
   )
 }

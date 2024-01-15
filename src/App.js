@@ -28,6 +28,9 @@ import SettingPage from './pages/admin/SettingPage';
 import BlogsPage from './pages/admin/BlogsPage';
 import ChatBotPage from './pages/admin/ChatBotPage';
 import ChatBot from './components/ChatBot';
+import BlogPage from './pages/BlogPage';
+import BlogEditPage from './pages/admin/BlogEditPage';
+import BlogCreatePage from './pages/admin/BlogCreatePage';
 
 if (localStorage.token) {
   setAuthToken(localStorage.token)
@@ -64,6 +67,9 @@ function App() {
             <Route exact path="/about" element={<NormalRoute><About /></NormalRoute>} />
             <Route exact path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
             <Route exact path="/:chatId" element={<ChatPage />} />
+            <Route exact path="/blogs/new" element={<AdminRoute><BlogCreatePage /></AdminRoute>} />
+            <Route exact path="/blogs/:blogId" element={<BlogPage />} />
+            <Route exact path="/blogs/:blogId/edit" element={<AdminRoute><BlogEditPage /></AdminRoute>} />
 
             <Route exact path="/admin/users" element={<AdminRoute><UsersPage /></AdminRoute>} />
             <Route exact path="/admin/blogs" element={<AdminRoute><BlogsPage /></AdminRoute>} />

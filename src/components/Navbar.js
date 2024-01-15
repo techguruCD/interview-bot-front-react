@@ -139,7 +139,10 @@ const Navbar = () => {
             <ul className="mx-[20px] mt-[3px] flex flex-col justify-center md:mx-[0px] md:mt-[0px] md:flex-row md:items-center">
               {menuItems &&
                 menuItems.map((item, index) => {
-                  const selected = (item.path === pathname || (item.path === '/signin' && pathname === '/signup'));
+                  const selected =
+                    item.path === pathname
+                    || (item.path === '/signin' && pathname === '/signup')
+                    || ((item.title === 'Blog' || item.title === 'Blogs') && (pathname.startsWith('/blogs')))
                   // alert(selected)
                   return (
                     <li
@@ -159,7 +162,7 @@ const Navbar = () => {
                             const hash = window.location.hash
                             if (hash) {
                               const element = document.querySelector(hash)
-                              if (element) element.scrollIntoView({behavior: 'smooth'})
+                              if (element) element.scrollIntoView({ behavior: 'smooth' })
                             }
                           }
                         }
