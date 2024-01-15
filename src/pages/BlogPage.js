@@ -1,12 +1,28 @@
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
-import { Link, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import showToaster from '../utils/showToaster'
+import { setLoading } from '../store/appSlice'
 export default function BlogPage() {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
   const user = useSelector(state => state.app.user)
   let { blogId } = useParams()
   const [blog, setBlog] = useState(null)
+
+  async function handleDelete() {
+    dispatch(setLoading(true))
+    try {
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/api/admin/delete-blog', { id: blogId })
+      showToaster(data.message)
+      dispatch(setLoading(false))
+      navigate('/admin/blogs')
+    } catch (err) {
+      showToaster(err?.response?.data?.message || { error: 'Please try again later' })
+    }
+    dispatch(setLoading(false))
+  }
 
   useEffect(() => {
     (async function () {
@@ -35,7 +51,7 @@ export default function BlogPage() {
               <button
                 type="button"
                 className="rounded-lg bg-rose-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-rose-800 focus:outline-none focus:ring-4 focus:ring-rose-300 dark:bg-rose-600 dark:hover:bg-rose-700 dark:focus:ring-rose-800"
-
+                onClick={handleDelete}
               >
                 Delete
               </button>
@@ -56,7 +72,9 @@ export default function BlogPage() {
             />
           </div>
         }
-        <div className='mt-6 whitespace-pre-line ck-content px-2 md:px-6' style={{ overflowWrap: 'break-word' }} dangerouslySetInnerHTML={{ __html: blog?.content }}></div>
+        <div className='mt-6 px-2 md:px-6'>
+          <div className='blog-content ck ck-content ck-editor__editable ck-rounded-corners ck-editor__editable_inline ck-blurred' style={{ overflowWrap: 'break-word' }} dangerouslySetInnerHTML={{ __html: blog?.content }}></div>
+        </div>
       </div>
     </div>
   )
