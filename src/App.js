@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import axios from 'axios';
 
@@ -32,6 +32,9 @@ import BlogPage from './pages/BlogPage';
 import BlogEditPage from './pages/admin/BlogEditPage';
 import BlogCreatePage from './pages/admin/BlogCreatePage';
 
+import ReactGA from 'react-ga';
+ReactGA.initialize('G-V7BQGMV938');
+
 if (localStorage.token) {
   setAuthToken(localStorage.token)
 }
@@ -39,6 +42,12 @@ if (localStorage.token) {
 function App() {
   const dispatch = useDispatch()
   const loading = useSelector(state => state.app.loading)
+
+  // const location = useLocation();
+  // useEffect(() => {
+  //   ReactGA.pageview(location.pathname + location.search);
+  // }, [location]);
+
   useEffect(() => {
     (async function () {
       if (localStorage.token) {
@@ -68,11 +77,12 @@ function App() {
             <Route exact path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
             <Route exact path="/:chatId" element={<ChatPage />} />
             <Route exact path="/blogs/new" element={<AdminRoute><BlogCreatePage /></AdminRoute>} />
-            <Route exact path="/blogs/:blogId" element={<BlogPage />} />
-            <Route exact path="/blogs/:blogId/edit" element={<AdminRoute><BlogEditPage /></AdminRoute>} />
+            <Route exact path="/blogs/:urlCaption" element={<BlogPage />} />
+            <Route exact path="/blogs/:urlCaption/edit" element={<AdminRoute><BlogEditPage /></AdminRoute>} />
 
             <Route exact path="/admin/users" element={<AdminRoute><UsersPage /></AdminRoute>} />
             <Route exact path="/admin/blogs" element={<AdminRoute><BlogsPage /></AdminRoute>} />
+            <Route exact path="/admin/about" element={<AdminRoute><About /></AdminRoute>} />
             <Route exact path="/admin/chatbot" element={<AdminRoute><ChatBotPage /></AdminRoute>} />
             <Route exact path="/admin/setting" element={<AdminRoute><SettingPage /></AdminRoute>} />
           </Route>

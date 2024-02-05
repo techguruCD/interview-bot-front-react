@@ -19,6 +19,7 @@ code {
 .ck.ck-editor {
   width: 100%!important;
   min-width: 300px;
+  font-size: 12pt;
 }
 
 .ck h2 {

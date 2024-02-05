@@ -5,8 +5,8 @@ import showToaster from '../../utils/showToaster'
 import BlogEdit from '../../components/BlogEdit'
 export default function BlogCreatePage() {
   const navigate = useNavigate()
-  function handleSuccess(blogId) {
-    navigate('/blogs/' + blogId)
+  function handleSuccess(urlCaption) {
+    navigate('/blogs/' + urlCaption)
   }
   function handleCancel() {
     navigate('/admin/blogs')

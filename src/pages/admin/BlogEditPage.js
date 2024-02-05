@@ -5,17 +5,17 @@ import showToaster from '../../utils/showToaster'
 import BlogEdit from '../../components/BlogEdit'
 export default function BlogEditPage() {
   const navigate = useNavigate()
-  let { blogId } = useParams()
+  let { urlCaption } = useParams()
   const [blog, setBlog] = useState(null)
 
-  function handleSuccess() {
-    navigate('/blogs/' + blogId)
+  function handleSuccess(urlCaption) {
+    navigate('/blogs/' + urlCaption)
   }
 
   useEffect(() => {
     (async function () {
       try {
-        const { data: { blog } } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { id: blogId } })
+        const { data: { blog } } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { urlCaption: urlCaption } })
         setBlog(blog)
       } catch (err) {
         showToaster(err?.response?.data?.message || { error: 'Please try again later' })

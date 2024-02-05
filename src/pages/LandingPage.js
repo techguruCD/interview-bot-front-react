@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Slider from 'react-slick'
 import "slick-carousel/slick/slick.css";
@@ -17,11 +17,13 @@ import EmptyImage from '../assets/images/emptyImage.png'
 import showToaster from '../utils/showToaster';
 import BlogModal from '../components/BlogModal';
 
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+
 const sliderSettings = {
   slidesToShow: 3,
   slidesToScroll: 1,
   dots: true,
-  infinite: false
+  infinite: true
 };
 
 const SimpleSlider = () => {
@@ -29,33 +31,43 @@ const SimpleSlider = () => {
     slidesToShow: 3,
     slidesToScroll: 1,
     dots: true,
-    infinite: false
+    infinite: true
   };
 
+  let sliderRef = useRef(null)
+
   return (
-    <Slider {...sliderSettings}>
-      <div>
-        <img src="http://placekitten.com/g/400/400" alt="randomOne" />
-        {/* <img height={300} width={300} alt="ricardavatar" src="/images/rikardslider.png" />
+    <div className='relative'>
+      <Slider {...sliderSettings} ref={slider => sliderRef = slider}>
+        <div>
+          <img src="http://placekitten.com/g/400/400" alt="randomOne" />
+          {/* <img height={300} width={300} alt="ricardavatar" src="/images/rikardslider.png" />
         <button className="text-white p-4 bg-[#6355d8]">Chat with Rikard's interview bot</button> */}
-      </div>
-      <div>
-        <img src="http://placekitten.com/g/400/400" alt="randomTwo" />
-        {/* <img height={300} width={300} alt="brionyavatar" src="/images/brionyslider.png" />
+        </div>
+        <div>
+          <img src="http://placekitten.com/g/400/400" alt="randomTwo" />
+          {/* <img height={300} width={300} alt="brionyavatar" src="/images/brionyslider.png" />
         <button className="text-white p-4 bg-[#6355d8]">Chat with Briony's interview bot</button> */}
-      </div>
-      <div>
-        <img src="http://placekitten.com/g/400/400" alt="randomThree" />
-        {/* <img height={300} width={300} alt="neilavatar" src="/images/neilslider.png" />
+        </div>
+        <div>
+          <img src="http://placekitten.com/g/400/400" alt="randomThree" />
+          {/* <img height={300} width={300} alt="neilavatar" src="/images/neilslider.png" />
         <button className="text-white p-4 bg-[#6355d8]">Chat with Neil's interview bot</button> */}
-      </div>
-      <div>
-        <img src="http://placekitten.com/g/400/400" alt="randomThree" />
-        {/* <img height={300} width={300} alt="neilavatar" src="/images/neilslider.png" />
+        </div>
+        <div>
+          <img src="http://placekitten.com/g/400/400" alt="randomThree" />
+          {/* <img height={300} width={300} alt="neilavatar" src="/images/neilslider.png" />
         <button className="text-white p-4 bg-[#6355d8]">Chat with Neil's interview bot</button> */}
-      </div>
-      {/* Add more slides as needed */}
-    </Slider>
+        </div>
+        {/* Add more slides as needed */}
+      </Slider>
+      <div className='w-8 md:w-20 absolute top-[45%] text-white bg-[#454545aa] rounded-full cursor-pointer' onClick={(e) => {
+        sliderRef.slickPrev();
+      }}><ChevronLeftIcon /></div>
+      <div className='w-8 md:w-20 absolute top-[45%] right-0 text-white bg-[#454545aa] rounded-full cursor-pointer' onClick={(e) => {
+        sliderRef.slickNext();
+      }}><ChevronRightIcon /></div>
+    </div>
   );
 }
 
@@ -272,6 +284,8 @@ export default function LandingPage() {
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false)
   const [selectedBlog, setSelectedBlog] = useState(null)
 
+  let blogSliderRef = useRef(null)
+
   useEffect(() => {
     const hash = window.location.hash
     if (hash) {
@@ -287,16 +301,6 @@ export default function LandingPage() {
       navigate('/profile')
     } else {
       navigate('/signup')
-    }
-  }
-  async function openBlog(id) {
-    try {
-      const { data: {blog} } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { id } })
-      setIsBlogModalOpen(true)
-      console.log(blog)
-      setSelectedBlog(blog)
-    } catch (err) {
-      showToaster(err?.response?.data?.message || { error: 'Please try again later' })
     }
   }
   return (
@@ -369,33 +373,6 @@ export default function LandingPage() {
                 as you see fit
               </p>
             </div>
-            {/* <div className="flex flex-wrap justify-evenly gap-4 mt-4">
-                <img src={"/images/rikard.png"} alt="rikard" />
-                <img src={"/images/briony.png"} alt="briony" />
-                <img src={"/images/neil.png"} alt="neil" />
-              </div> */}
-            {/* <Slider {...sliderSettings}>
-                <div className="mt-6">
-                  <div className="flex flex-col justify-center ">
-
-                    <img className="" src={"/images/rikard.png"} alt="rikard" />
-                    <img alt="ricardavatar" src="/images/rikardslider.png" />
-                    <button className=" text-white p-4  bg-[#6355d8]">Chat with Rikard&apos;s interview bot</button>
-                  </div>
-
-                  <div className="flex flex-col justify-center ">
-                    <img src={"/images/briony.png"} alt="briony" />
-                    <img alt="brionyavatar" src="/images/brionyslider.png" />
-                    <button className=" text-white p-4  bg-[#6355d8]">Chat with Briony&apos;s interview bot</button>
-                  </div>
-                  <div className="flex flex-col justify-center mt-4">
-                    <img className="" src={"/images/neil.png"} alt="neil" />
-                    <img className="" alt="neilavatar" src="/images/neilslider.png" />
-                    <button className=" text-white p-4  bg-[#6355d8]">Chat with Neil&apos;s interview bot</button>
-                  </div>
-                </div>
-
-              </Slider> */}
           </div>
         </div>
         <div className="mt-[40px]">
@@ -417,35 +394,49 @@ export default function LandingPage() {
                 !blogs.length && <div className='text-center text-lg text-gray-400'>No articles</div>
               }
               {
-                !!blogs.length && <Slider {...sliderSettings}>
-                  {
-                    blogs.map((blog, index) => (
-                      <div key={index} className="flex flex-col justify-center items-center">
-                        <div className='p-4'>
-                          <a target='_blank' href={'/blogs/' + blog.id}>
-                            <img className='rounded-xl' src={blog.image ? process.env.REACT_APP_API_URL + blog.image : EmptyImage} />
-                          </a>
-                        </div>
-                        <p
-                          className="cursor-pointer text-[28px] underline mb-[12px] font-medium leading-8 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
-                          <a target='_blank' href={'/blogs/' + blog.id}>{blog.title}</a>
-                        </p>
-                        {/* <p className="text-[20px] font-normal mb-[12px] leading-7 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
+                !!blogs.length && <div className='relative'>
+                  <Slider {...sliderSettings} ref={slider => {
+                    blogSliderRef = slider;
+                  }}>
+                    {
+                      blogs.map((blog, index) => (
+                        <div key={index} className="flex flex-col justify-center items-center">
+                          <div className='p-4'>
+                            <a target='_blank' href={'/blogs/' + blog.urlCaption}>
+                              {/* <div className='aspect-square bg-cover bg-center rounded-xl' style={{backgroundImage: `url(${blog.image ? process.env.REACT_APP_API_URL + blog.image : EmptyImage})`}} /> */}
+                              {/* <img className='rounded-xl' src={blog.image ? process.env.REACT_APP_API_URL + blog.image : EmptyImage} /> */}
+                              <div className='aspect-square flex justify-center items-center'>
+                                <img className='rounded-xl' src={blog.image ? process.env.REACT_APP_API_URL + blog.image : EmptyImage} />
+                              </div>
+                            </a>
+                          </div>
+                          <p
+                            className="cursor-pointer text-[28px] underline mb-[12px] font-medium leading-8 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
+                            <a target='_blank' href={'/blogs/' + blog.urlCaption}>{blog.title}</a>
+                          </p>
+                          {/* <p className="text-[20px] font-normal mb-[12px] leading-7 text-center max-w-[100%] whitespace-nowrap overflow-hidden text-ellipsis">
                           {blog.content}
                         </p> */}
-                        <p className="text-[20px] font-light text-center leading-6">
-                          August 19,2023
-                        </p>
-                      </div>
-                    ))
-                  }
-                </Slider>
+                          <p className="text-[20px] font-light text-center leading-6">
+                            August 19,2023
+                          </p>
+                        </div>
+                      ))
+                    }
+                  </Slider>
+                  <div className='w-8 md:w-20 absolute bottom-[50%] text-white bg-[#454545aa] rounded-full cursor-pointer' onClick={(e) => {
+                    blogSliderRef.slickPrev();
+                  }}><ChevronLeftIcon /></div>
+                  <div className='w-8 md:w-20 absolute bottom-[50%] right-0 text-white bg-[#454545aa] rounded-full cursor-pointer' onClick={(e) => {
+                    blogSliderRef.slickNext();
+                  }}><ChevronRightIcon /></div>
+                </div>
               }
             </div>
           </div>
         </section>
       </div>
-      <BlogModal blog={selectedBlog} isOpen={isBlogModalOpen} handleClose={() => setIsBlogModalOpen(false)}/>
+      <BlogModal blog={selectedBlog} isOpen={isBlogModalOpen} handleClose={() => setIsBlogModalOpen(false)} />
     </div>
   )
 }

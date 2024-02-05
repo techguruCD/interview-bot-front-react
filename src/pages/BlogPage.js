@@ -8,13 +8,13 @@ export default function BlogPage() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const user = useSelector(state => state.app.user)
-  let { blogId } = useParams()
+  let { urlCaption } = useParams()
   const [blog, setBlog] = useState(null)
 
   async function handleDelete() {
     dispatch(setLoading(true))
     try {
-      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/api/admin/delete-blog', { id: blogId })
+      const { data } = await axios.post(process.env.REACT_APP_API_URL + '/api/admin/delete-blog', { id: blog.id })
       showToaster(data.message)
       dispatch(setLoading(false))
       navigate('/admin/blogs')
@@ -27,7 +27,7 @@ export default function BlogPage() {
   useEffect(() => {
     (async function () {
       try {
-        const { data: { blog } } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { id: blogId } })
+        const { data: { blog } } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { urlCaption } })
         setBlog(blog)
       } catch (err) {
         showToaster(err?.response?.data?.message || { error: 'Please try again later' })
@@ -44,7 +44,7 @@ export default function BlogPage() {
               <Link
                 type="button"
                 className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                to={'/blogs/' + blogId + '/edit'}
+                to={'/blogs/' + urlCaption + '/edit'}
               >
                 Edit
               </Link>

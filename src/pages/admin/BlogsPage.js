@@ -214,17 +214,6 @@ export default function BlogsPage() {
     }
   }
 
-  async function openBlog(id) {
-    try {
-      const { data: { blog } } = await axios.get(process.env.REACT_APP_API_URL + '/api/blog', { params: { id } })
-      setIsBlogModalOpen(true)
-      console.log(blog)
-      setSelectedBlog(blog)
-    } catch (err) {
-      showToaster(err?.response?.data?.message || { error: 'Please try again later' })
-    }
-  }
-
   useEffect(() => {
     getPage();
   }, [])
@@ -276,12 +265,12 @@ export default function BlogsPage() {
                           </div>
                           <div className="ml-4">
                             {/* <div className="font-medium text-gray-900 max-w-[150px] whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer underline" onClick={() => openBlog(blog.id)}>{blog.title}</div> */}
-                            <Link className="font-medium text-gray-900 max-w-[150px] whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer underline" to={'/blogs/' + blog.id}>{blog.title}</Link>
+                            <Link className="font-medium text-gray-900 max-w-[150px] whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer underline" to={'/blogs/' + blog.urlCaption}>{blog.title}</Link>
                           </div>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
-                        <div className="text-gray-900 max-w-[250px] whitespace-nowrap overflow-hidden text-ellipsis"><Link className='cursor-pointer underline' to={'/blogs/' + blog.id}>{blog.title}</Link></div>
+                        <div className="text-gray-900 max-w-[250px] whitespace-nowrap overflow-hidden text-ellipsis"><Link className='cursor-pointer underline' to={'/blogs/' + blog.urlCaption}>{blog.title}</Link></div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">{moment.utc(blog.createdAt).local().format('yyyy-MM-DD HH:mm:ss')}</td>
                       <td className="relative whitespace-nowrap py-5 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">

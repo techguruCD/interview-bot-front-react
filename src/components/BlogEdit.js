@@ -47,7 +47,7 @@ export default function BlogEdit({
       setTitle('')
       setContent('')
       setImage(null)
-      onSuccess?.(data.blog.id)
+      onSuccess?.(data.blog.urlCaption)
     } catch (err) {
       showToaster(err?.response?.data?.message || { error: 'Please try again later' })
       if (err?.response?.data?.isJoi) {
